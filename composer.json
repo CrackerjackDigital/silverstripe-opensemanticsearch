@@ -39,11 +39,8 @@
 		"installer-name": "opensemanticsearch"
 	},
 	"autoload": {
-		"psr-0": {
-			"OpenSemanticSearch\\http": "code/traits",
-			"OpenSemanticSearch\\json": "code/traits",
-			"OpenSemanticSearch\\array_access": "code/traits",
-			"OpenSemanticSearch\\array_bitfield_map": "code/traits"
+		"files": {
+			"autoloader.php"
 		}
 	}
 }
