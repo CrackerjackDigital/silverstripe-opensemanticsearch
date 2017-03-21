@@ -1,5 +1,5 @@
 {
-	"name": "crackerjackdigital/silverstripe-open-semantic-search",
+	"name": "crackerjackdigital/silverstripe-opensemanticsearch",
 	"type": "silverstripe-module",
 	"description": "Open Semantic Search tools for SilverStripe",
 	"homepage": "http://github.com/crackerjackdigital",
@@ -31,7 +31,7 @@
 	"repositories": [
 		{
 			"type": "vcs",
-			"url": "https://github.com/CrackerjackDigital/silverstripe-open-semantic-search.git"
+			"url": "https://github.com/CrackerjackDigital/silverstripe-opensemanticsearch.git"
 		}
 	],
 	"extra": {
