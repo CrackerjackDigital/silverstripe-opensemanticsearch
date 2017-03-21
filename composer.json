@@ -4,6 +4,7 @@
 	"description": "Open Semantic Search tools for SilverStripe",
 	"homepage": "http://github.com/crackerjackdigital",
 	"license": "BSD-3-Clause",
+	"minimum-stability": "dev",
 	"keywords": [
 		"silverstripe",
 		"opensemanticsearch",
@@ -37,5 +38,12 @@
 	"extra": {
 		"installer-name": "opensemanticsearch"
 	},
-	"minimum-stability": "dev"
+	"autoload": {
+		"psr-0": {
+			"OpenSemanticSearch\\http": "code/traits",
+			"OpenSemanticSearch\\json": "code/traits",
+			"OpenSemanticSearch\\array_access": "code/traits",
+			"OpenSemanticSearch\\array_bitfield_map": "code/traits"
+		}
+	}
 }
