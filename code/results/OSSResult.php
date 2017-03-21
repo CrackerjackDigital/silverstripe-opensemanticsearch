@@ -1,43 +1,21 @@
 <?php
 namespace OpenSemanticSearch;
-
-class OSSResult extends \Object implements ResultInterface {
-	private $data;
-
-	public function __construct($data) {
-		$this->data = $data;
-		parent::__construct();
-	}
-
-	public function data() {
-		return $this->data;
-	}
-
-	/**
-	 * @return mixed
-	 */
-	public function response() {
-		return $this->data;
-	}
-
-	/**
-	 * Return opposite of isError
-	 *
-	 * @return bool
-	 */
-	public function isOK() {
-		return ! $this->isError();
-	}
+/**
+ * OSSResult wraps a result returned from a call to OpenSemanticSearch endpoints.
+ *
+ * @package OpenSemanticSearch
+ */
+class OSSResult extends OKResult {
 
 	/**
 	 * @return bool
 	 */
 	public function isError() {
-		return !(bool)$this->data;
+		return !(bool)$this->data();
 	}
 
 	public function errorMessage() {
-		return "Request returned '" . print_r($this->data, true) . "'";
+		return "Request returned '" . print_r($this->data(), true) . "'";
 	}
 
 	/**
@@ -51,20 +29,6 @@ class OSSResult extends \Object implements ResultInterface {
 	 * @return int
 	 */
 	public function count() {
-		return 0;
-	}
-
-	/**
-	 * @return \Traversable|array
-	 */
-	public function items() {
-		return [];
-	}
-
-	/**
-	 * @return int
-	 */
-	public function start() {
 		return 0;
 	}
 

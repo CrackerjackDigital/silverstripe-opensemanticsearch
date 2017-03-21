@@ -1,10 +1,7 @@
 <?php
 namespace OpenSemanticSearch;
 
-use Solarium\Core\Client\Response;
 use Solarium\QueryType\Select\Result\Result;
-
-require_once( __DIR__ . '/../traits/array_access.php' );
 
 class SolariumResult extends Result implements ResultInterface {
 
@@ -17,7 +14,7 @@ class SolariumResult extends Result implements ResultInterface {
 
 	/**
 	 * Returns json_decoded response body.
-	 * @return mixed
+	 * @return string decoded json
 	 */
 	public function data() {
 		return json_decode($this->getResponse()->getBody());

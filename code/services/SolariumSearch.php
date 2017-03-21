@@ -14,6 +14,7 @@ use Solarium\Core\Client\Endpoint;
 class SolariumSearch extends Service implements SearchInterface {
 	use array_bitfield_map;
 	use json;
+	use http;
 
 	const ServiceSolr    = self::TypeSolr;
 	const EndpointRemove = 'delete';
@@ -45,11 +46,14 @@ class SolariumSearch extends Service implements SearchInterface {
 	public function __construct( $env = '' ) {
 		parent::__construct( $env );
 
+		$uri = $this->uri( self::ServiceSolr, self::EndpointSearch );
+
 		$endpointInit   = array_merge(
-			parse_url( $this->uri( self::ServiceSolr, self::EndpointSearch ), PHP_URL_SCHEME | PHP_URL_USER | PHP_URL_PASS | PHP_URL_HOST | PHP_URL_PORT | PHP_URL_PATH ),
+			parse_url( $uri ),
 			[
 				'timeout' => $this->setting( 'timeout', $this->setting( 'service' ) ),
 				'core'    => $this->core(),
+				'key'     => md5( $uri ),
 			]
 		);
 		$this->endpoint = new Endpoint( $endpointInit );
@@ -101,27 +105,28 @@ class SolariumSearch extends Service implements SearchInterface {
 			'content',
 		],
 		$filters = [
-			'year' => self::FilterYear,            // e.g. 2017
-			'type' => self::FilterContentType,     // e.g. application/pdf
+			self::FilterYear        => '',            // e.g. 2017
+			self::FilterContentType => '',     // e.g. application/pdf
 		],
 		$facets = [],
 		$options = [
-			'view'     => self::ViewList,
-			'start'    => 0,
-			'limit'    => null,                    // null means use configured default
-			'stemming' => self::Stemming,
-			'operator' => self::OperatorOR,
-			'synonyms' => 1,
-			'sort'     => self::SortRelevance,
+			'view'        => self::ViewList,
+			'start'       => 0,
+			'limit'       => null,                    // null means use configured default
+			'stemming'    => self::Stemming,
+			'operator'    => self::OperatorOR,
+			'synonyms'    => 1,
+			'resultclass' => SolariumResult::class,
+			//			'sort'     => [ self::SortRelevance ],
 		],
 		$include = self::IncludeFiles | self::IncludeLocalPages
 	) {
-		$client = new Client( [
-			'resultclass' => SolariumResult::class,
-		] );
-		$client->addEndpoint( $this->endpoint );
+		$client = new Client($options);
 
-		$query = $client->createSelect( $this->nativeOptions( $options ) );
+		$client->addEndpoint( $this->endpoint )
+		       ->setDefaultEndpoint( $this->endpoint );
+
+		$query = $client->createSelect( $options );
 
 		if ( $fullText ) {
 			$query->setQuery( $fullText );
@@ -135,14 +140,16 @@ class SolariumSearch extends Service implements SearchInterface {
 			}
 		}
 		foreach ( array_filter( $filters ) as $filter => $value ) {
-			if ( $filter == 'year' ) {
-				$query->addParam( 'zoom', 'year' );
-				$query->addParam( 'year', $value );
-				$query->addParam( 'start_dt', $value );
-				$query->addParam( 'end_dt', $value );
-			}
-			if ( $filter == 'type' ) {
+			if ( $value ) {
+				if ( $filter == 'year' ) {
+					$query->addParam( 'zoom', 'year' );
+					$query->addParam( 'year', $value );
+					$query->addParam( 'start_dt', $value );
+					$query->addParam( 'end_dt', $value );
+				}
+				if ( $filter == 'type' ) {
 
+				}
 			}
 		}
 		/** @var SolariumResult $result */

@@ -18,10 +18,6 @@ abstract class Service extends \Object implements ServiceInterface {
 	// current configured environment, set in ctor
 	protected $env;
 
-	protected $ossService = self::ServiceOSS;
-
-	protected $solrService = self::ServiceSolr;
-
 	// tokens in uris start with this
 	private static $token_start = '{';
 
@@ -311,7 +307,7 @@ abstract class Service extends \Object implements ServiceInterface {
 	 * TODO allow config to be e.g. 'service.endpoint.data' (dot-encoded)
 	 *
 	 * @param string|array $config either name of configuration variable, or data to search
-	 * @param string       $key    to match, e.g. $this->ossService, if not supplied defaults to current environment (e.g. 'dev')
+	 * @param string       $key    to match, e.g. 'service', if not supplied defaults to env()
 	 *
 	 * @return mixed
 	 */
