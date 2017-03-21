@@ -39,8 +39,6 @@
 		"installer-name": "opensemanticsearch"
 	},
 	"autoload": {
-		"files": {
-			"autoloader.php"
-		}
+		"files": [ "autoloader.php" ]
 	}
 }
