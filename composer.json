@@ -1,0 +1,41 @@
+{
+	"name": "crackerjackdigital/silverstripe-open-semantic-search",
+	"type": "silverstripe-module",
+	"description": "Open Semantic Search tools for SilverStripe",
+	"homepage": "http://github.com/crackerjackdigital",
+	"license": "BSD-3-Clause",
+	"keywords": [
+		"silverstripe",
+		"opensemanticsearch",
+		"solr",
+		"search",
+		"fulltext",
+		"documents",
+		"index"
+	],
+	"authors": [
+		{
+			"name": "Steve Wake",
+			"homepage": "https://github.com/wakes"
+		},
+		{
+			"name": "CrackerJack Digital",
+			"homepage": "http://www.crackerjack.net.nz/"
+		}
+	],
+	"require": {
+		"php": ">=5.4",
+		"silverstripe/framework": ">=3.1",
+		"solarium/solarium": "~3.8"
+	},
+	"repositories": [
+		{
+			"type": "vcs",
+			"url": "https://github.com/CrackerjackDigital/silverstripe-open-semantic-search.git"
+		}
+	],
+	"extra": {
+		"installer-name": "opensemanticsearch"
+	},
+	"minimum-stability": "dev"
+}

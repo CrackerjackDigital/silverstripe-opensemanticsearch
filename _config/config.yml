@@ -1,0 +1,51 @@
+---
+Name: oss-quaff-config
+---
+Injector:
+  SearchService:
+    class: 'OpenSemanticSearch\SolariumSearch'
+  IndexService:
+    class: 'OpenSemanticSearch\OSSIndexer'
+OpenSemanticSearch\Query:
+  extensions:
+    - OpenSemanticSearch\MetaDataExtension
+File:
+  extensions:
+    - OpenSemanticSearch\MetaDataExtension
+Page:
+  extensions:
+    - OpenSemanticSearch\MetaDataExtension
+
+# add the following in app config for files
+# File:
+#  extensions:
+#    - 'OpenSemanticSearch\FileExtension'
+#
+# add the following in app config for Versioned files
+# File:
+#  extensions:
+#    - 'OpenSemanticSearch\VersionedFileExtension'
+#
+# add the following in app config for each Page class you want to make searchable (or Page for all pages)
+# Page:
+#  extensions:
+#    - 'OpenSemanticSearch\PageExtension'
+#
+OpenSemanticSearch\Service:
+  path_map:
+    '*':
+      '/assets/': '/mount/files/assets/'
+  core:
+    '*': 'core1'
+  endpoints:
+    '*':
+      oss:
+        '*': 'http://localhost:9010/search-apps/api/{endpoint}'
+      solr:
+        '*': 'http://localhost:9011/solr'
+  context_options:
+    '*':
+      oss:
+        http:
+          method: 'GET'
+          timeout: 20
