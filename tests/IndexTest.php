@@ -1,6 +1,6 @@
 <?php
 
-use OpenSemanticSearch\IndexingInterface;
+use OpenSemanticSearch\IndexInterface;
 use OpenSemanticSearch\SearchInterface;
 use OpenSemanticSearch\Service;
 use OpenSemanticSearch\ServiceInterface;
@@ -92,19 +92,19 @@ class OpenSemanticSearchIndexTest extends FunctionalTest {
 	protected function searchService() {
 		static $service;
 		if ( ! $service ) {
-			$service = \Injector::inst()->create( 'SearchService' );
+			$service = \Injector::inst()->create( SearchInterface::ServiceName);
 		}
 
 		return $service;
 	}
 
 	/**
-	 * @return IndexingInterface
+	 * @return IndexInterface
 	 */
 	protected function indexingService() {
 		static $service;
 		if ( ! $service ) {
-			$service = \Injector::inst()->create( 'IndexService' );
+			$service = \Injector::inst()->create( IndexInterface::ServiceName);
 		}
 
 		return $service;

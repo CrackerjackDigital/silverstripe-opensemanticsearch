@@ -4,6 +4,7 @@ namespace OpenSemanticSearch;
  * Extension to add to Pages
  *
  * @package OpenSemanticSearch
+ * @property \Page owner
  */
 class PageExtension extends \SiteTreeExtension {
 
@@ -16,7 +17,7 @@ class PageExtension extends \SiteTreeExtension {
 	 */
 	public function onBeforePublish( &$original ) {
 		if ( $this->owner->isChanged() ) {
-			\Injector::inst()->get( 'OpenSemanticSearchService' )->removePage( $this->Link() );
+			\Injector::inst()->get( IndexInterface::ServiceName )->removePage( $this->Link() );
 		}
 		return parent::onBeforePublish($original);
 	}
@@ -27,7 +28,7 @@ class PageExtension extends \SiteTreeExtension {
 	 * @param \SiteTree $original
 	 */
 	public function onAfterPublish( &$original ) {
-		\Injector::inst()->get( 'OpenSemanticSearchService' )->addPage( $this->Link() );
+		\Injector::inst()->get( IndexInterface::ServiceName )->addPage( $this->Link() );
 
 		return parent::onAfterPublish( $original );
 	}
@@ -36,7 +37,7 @@ class PageExtension extends \SiteTreeExtension {
 	 * Remove Page from index when it is unpublished.
 	 */
 	public function onBeforeUnpublish() {
-		\Injector::inst()->get( 'OpenSemanticSearchService' )->removePage( $this->Link() );
+		\Injector::inst()->get( IndexInterface::ServiceName )->removePage( $this->Link() );
 
 		return parent::onBeforeUnpublish( );
 	}

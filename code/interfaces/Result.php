@@ -32,11 +32,17 @@ interface ResultInterface extends ServiceInterface {
 	public function isError();
 
 	/**
-	 * Return a displayable error message if isError returns true
+	 * Return a displayable message, e.g. 'OK' or 'Forbidden'
 	 *
 	 * @return string
 	 */
-	public function errorMessage();
+	public function resultMessage();
+
+	/**
+	 * Return a code (e.g. an http response may be 200 for OK, or 403 for forbidden).
+	 * @return mixed
+	 */
+	public function resultCode();
 
 	/**
 	 * Returns if the response contains response items, such as a list of documents

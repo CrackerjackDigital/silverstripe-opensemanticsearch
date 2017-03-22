@@ -7,13 +7,16 @@ namespace OpenSemanticSearch;
  */
 class ErrorResult extends \Object implements ResultInterface {
 
-	// message to display
-	private $message;
-	// additional data
-	private $data;
+	// e.g. 'Forbidden' or 'Not Found'
+	protected $message;
+	// e.g. for HTTP 401 or 403
+	protected $code;
+	// data this may contain a native message and code so should be extracted accordingly by a derived class.
+	protected $data;
+	// probably not used in the case of errors
+	protected $limit;
 
-	public function __construct($message, $data) {
-		$this->message = $message;
+	public function __construct($message, $code = null, $data = null) {
 		$this->data = $data;
 		parent::__construct();
 	}
@@ -46,12 +49,20 @@ class ErrorResult extends \Object implements ResultInterface {
 	}
 
 	/**
-	 * Return a displayable error message if isError returns true
+	 * Return a displayable error message set in ctor.
 	 *
 	 * @return string
 	 */
-	public function errorMessage() {
+	public function resultMessage() {
 		return $this->message;
+	}
+
+	/**
+	 * Return the result code set in ctor.
+	 * @return mixed
+	 */
+	public function resultCode() {
+		return $this->code;
 	}
 
 	/**
@@ -88,5 +99,23 @@ class ErrorResult extends \Object implements ResultInterface {
 	 */
 	public function start() {
 		return 0;
+	}
+
+	/**
+	 * Return the response data in a decoded format, e.g if the response is in json, then a json_decoded array
+	 *
+	 * @return array
+	 */
+	public function data() {
+		return $this->data;
+	}
+
+	/**
+	 * Return the number of items requested, or null if no limit
+	 *
+	 * @return int|null
+	 */
+	public function limit() {
+		return $this->limit;
 	}
 }

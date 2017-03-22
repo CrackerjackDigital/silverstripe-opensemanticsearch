@@ -2,14 +2,20 @@
 namespace OpenSemanticSearch;
 
 abstract class OKResult extends \Object implements ResultInterface {
-	private $data;
+	protected $data;
 
-	private $start = 0;
+	protected $message;
 
-	private $limit = null;
+	protected $code;
 
-	public function __construct( $data ) {
+	protected $start = 0;
+
+	protected $limit = null;
+
+	public function __construct( $data, $message = null, $code = null ) {
 		$this->data = $data;
+		$this->message = $message;
+		$this->code = $code;
 		parent::__construct();
 	}
 
@@ -40,6 +46,24 @@ abstract class OKResult extends \Object implements ResultInterface {
 	 */
 	public function isError() {
 		return false;
+	}
+
+	/**
+	 * Returns the code passed in ctor.
+	 *
+	 * @return mixed
+	 */
+	public function resultCode() {
+		return $this->code;
+	}
+
+	/**
+	 * Returns the message passed in ctor.
+	 *
+	 * @return mixed
+	 */
+	public function resultMessage() {
+		return $this->message;
 	}
 
 	/**

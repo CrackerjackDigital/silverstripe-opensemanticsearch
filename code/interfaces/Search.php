@@ -2,6 +2,7 @@
 namespace OpenSemanticSearch;
 
 interface SearchInterface extends PathMappingInterface {
+	const ServiceName       = 'SearchService';
 	const FilterYear        = 'year';
 	const FilterContentType = 'type';
 
@@ -18,7 +19,6 @@ interface SearchInterface extends PathMappingInterface {
 	 * @return ResultInterface
 	 */
 	public function findPage( $pageOrID );
-
 
 	public function findURL( $url );
 

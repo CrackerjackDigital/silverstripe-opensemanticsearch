@@ -59,15 +59,12 @@ class SolariumResult extends Result implements ResultInterface {
 	/**
 	 * @return string
 	 */
-	public function errorMessage() {
-		return $this->isError() ? $this->getResponse()->getStatusMessage() : '';
+	public function resultMessage() {
+		return $this->getResponse()->getStatusMessage();
 	}
 
-	/**
-	 * @return int
-	 */
-	public function errorCode() {
-		return $this->isError() ? $this->getResponse()->getStatusCode() : 0;
+	public function resultCode() {
+		return $this->getResponse()->getStatusCode();
 	}
 
 }

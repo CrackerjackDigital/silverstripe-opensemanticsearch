@@ -30,7 +30,7 @@ class OSSController extends \ContentController {
 
 		if ($terms) {
 			/** @var SearchInterface $service */
-			$service = \Injector::inst()->get('SearchService');
+			$service = \Injector::inst()->get(SearchInterface::ServiceName);
 			$results = $service->search($terms);
 		}
 		return $this->renderWith(

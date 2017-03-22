@@ -3,7 +3,8 @@ namespace OpenSemanticSearch;
 
 use Page;
 
-interface IndexingInterface extends PathMappingInterface {
+interface IndexInterface extends PathMappingInterface {
+	const ServiceName = 'IndexInterface';
 
 	/**
 	 * @param string $localPath relative to assets folder or absolute from wb root root of file to add to index.

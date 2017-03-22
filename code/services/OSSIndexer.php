@@ -15,7 +15,7 @@ use SiteTree;
  *
  * @package OpenSemanticSearch
  */
-class OSSIndexer extends RestfulService implements IndexingInterface {
+class OSSIndexer extends RestfulService implements IndexInterface {
 	const ServiceOSS  = self::TypeOSS;
 
 	const EndpointIndexDir  = 'index-dir';
