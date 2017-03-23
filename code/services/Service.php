@@ -47,17 +47,10 @@ abstract class Service extends \Object implements ServiceInterface {
 	 * @var array
 	 */
 	private static $path_map = [
-		'dev' => [
-			'/assets/' => '/mount/files/assets/',
-		],
-		'*'   => [
-			'/assets/' => '/mount/files/assets/',
-		],
 	];
 
 	// map an environment to a core 'name', shared between derived services
 	private static $core = [
-		'*' => 'core1',
 	];
 
 	// configure url paths to services depending on environment

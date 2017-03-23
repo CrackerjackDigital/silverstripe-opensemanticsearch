@@ -1,51 +1,55 @@
 ---
-Name: oss-quaff-config
+Name: open-semantic-search-config
 ---
 Injector:
   SearchService:
-    class: 'OpenSemanticSearch\SolariumSearch'
+    class: 'OpenSemanticSearch\SolariumSearcher'
   IndexService:
     class: 'OpenSemanticSearch\OSSIndexer'
 OpenSemanticSearch\Query:
   extensions:
-    - OpenSemanticSearch\MetaDataExtension
+    - 'OpenSemanticSearch\MetaDataExtension'
 File:
   extensions:
-    - OpenSemanticSearch\MetaDataExtension
+    - 'OpenSemanticSearch\MetaDataExtension'
 Page:
   extensions:
-    - OpenSemanticSearch\MetaDataExtension
+    - 'OpenSemanticSearch\MetaDataExtension'
 
 # add the following in app config for files
 # File:
 #  extensions:
-#    - 'OpenSemanticSearch\FileExtension'
+#    - OpenSemanticSearch\FileExtension
 #
 # add the following in app config for Versioned files
 # File:
 #  extensions:
-#    - 'OpenSemanticSearch\VersionedFileExtension'
+#    - OpenSemanticSearch\VersionedFileExtension
 #
 # add the following in app config for each Page class you want to make searchable (or Page for all pages)
 # Page:
 #  extensions:
-#    - 'OpenSemanticSearch\PageExtension'
+#    - OpenSemanticSearch\PageExtension
 #
 OpenSemanticSearch\Service:
   path_map:
-    '*':
+    dev:
       '/assets/': '/mount/files/assets/'
   core:
-    '*': 'core1'
-  endpoints:
-    '*':
-      oss:
-        '*': 'http://localhost:9010/search-apps/api/{endpoint}'
-      solr:
-        '*': 'http://localhost:9011/solr'
+    dev: 'core1'
+OpenSemanticSearch\OSSIndexer:
   context_options:
-    '*':
+    dev:
       oss:
         http:
           method: 'GET'
           timeout: 20
+  endpoints:
+    dev:
+      oss:
+        '*': 'http://localhost:9010/search-apps/api/{endpoint}'
+OpenSemanticSearch\SolrSearcher:
+  endpoints:
+    dev:
+      solr:
+        '*': 'http://localhost:9011/solr'

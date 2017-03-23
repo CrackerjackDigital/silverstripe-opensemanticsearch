@@ -11,7 +11,7 @@ use Solarium\Core\Client\Endpoint;
  *
  * @package OpenSemanticSearch\Service
  */
-class SolariumSearch extends Service implements SearchInterface {
+class SolariumSearcher extends Service implements SearchInterface {
 	use array_bitfield_map;
 	use json;
 	use http;
@@ -19,20 +19,6 @@ class SolariumSearch extends Service implements SearchInterface {
 	const ServiceSolr    = self::TypeSolr;
 	const EndpointRemove = 'delete';
 	const EndpointSearch = 'search';
-
-	// configure url paths to services depending on environment
-	private static $endpoints = [
-		'dev' => [
-			self::ServiceSolr => [
-				self::EndpointSearch => 'http://localhost:9011/solr',
-			],
-		],
-		'*'   => [
-			self::ServiceSolr => [
-				self::EndpointSearch => 'http://searcher:8011/solr',
-			],
-		],
-	];
 
 	/** @var array default fields to search for full text */
 	private static $fulltext_fields = [ 'title', 'content' ];

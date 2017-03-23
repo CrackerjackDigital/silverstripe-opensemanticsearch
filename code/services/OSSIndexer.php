@@ -22,31 +22,6 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	const EndpointIndexFile = 'index-file';
 	const EndpointIndexURL  = 'index-web';
 
-	// configure url paths to services depending on environment
-	private static $endpoints = [
-		'dev' => [
-			self::ServiceOSS  => [
-				'*' => 'http://localhost:9010/search-apps/api/{endpoint}',
-			],
-		],
-		'*'   => [
-			self::ServiceOSS  => [
-				'*' => 'http://searcher:8010/search-apps/api/{endpoint}',
-			],
-		],
-	];
-
-	private static $context_options = [
-		'*' => [
-			self::ServiceOSS => [
-				'http' => [
-					'method'  => 'GET',
-					'timeout' => 20,
-				],
-			],
-		],
-	];
-
 	/**
 	 * @param string $localPath relative to assets folder or absolute from wb root root of file to add to index.
 	 *

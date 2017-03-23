@@ -10,4 +10,6 @@ class RestfulService extends Service {
 	use http;
 	use json;
 
+	private static $context_options = [
+	];
 }
