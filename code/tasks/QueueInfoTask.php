@@ -12,7 +12,7 @@ use Modular\Fields\URL as URLField;
  *
  * @package OpenSemanticSearch
  */
-class QueueIndexTask extends Task {
+class QueueInfoTask extends Task {
 	const PageIDParam = 'pageid';
 	const FileIDParam = 'fileid';
 	const URLParam    = 'url';
@@ -26,28 +26,28 @@ class QueueIndexTask extends Task {
 	 * @throws \Modular\Exceptions\Exception
 	 */
 	public function execute( $params = null ) {
-		$this->trackable_start(__METHOD__, "Trying to queue an IndexTask");
+		$this->trackable_start( __METHOD__, "Trying to queue an IndexTask" );
 
 		if ( isset( $params[ self::PageIDParam ] ) ) {
-			$task = \Injector::inst()->get( 'IndexTask' )->dispatch( [
+			$task = \Injector::inst()->get( 'InfoTask' )->dispatch( [
 				PageField::field_name()   => $params[ self::PageIDParam ],
 				IndexAction::field_name() => IndexAction::ReIndex,
 			] );
 		} elseif ( isset( $params[ self::FileIDParam ] ) ) {
-			$task = \Injector::inst()->get( 'IndexTask' )->dispatch( [
+			$task = \Injector::inst()->get( 'InfoTask' )->dispatch( [
 				FileField::field_name()   => $params[ self::FileIDParam ],
 				IndexAction::field_name() => IndexAction::ReIndex,
 			] );
 
 		} elseif ( isset( $params[ self::URLParam ] ) ) {
-			$task = \Injector::inst()->get( 'IndexTask' )->dispatch( [
+			$task = \Injector::inst()->get( 'InfoTask' )->dispatch( [
 				URLField::field_name()    => $params[ self::URLParam ],
 				IndexAction::field_name() => IndexAction::ReIndex,
 			] );
 		} else {
 			return $this->debug_fail( new Exception( "No valid parameters passed" ) );
 		}
-		$this->trackable_end("queued task '$task->Title'");
+		$this->trackable_end( "queued task '$task->Title'" );
 
 	}
 }

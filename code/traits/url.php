@@ -22,10 +22,10 @@ trait url {
 	protected function add() {
 		$fieldName = $this->ossURLFieldName();
 
-		IndexTask::create( [
+		\Injector::inst()->get( 'IndexTask' )->dispatch( [
 			\Modular\Fields\URL::Name => $this->owner->$fieldName,
 			IndexAction::Name         => IndexAction::Add,
-		] )->write();
+		] );
 	}
 
 	/**
@@ -34,9 +34,9 @@ trait url {
 	protected function remove() {
 		$fieldName = $this->ossURLFieldName();
 
-		IndexTask::create( [
+		\Injector::inst()->get( 'IndexTask' )->dispatch( [
 			\Modular\Fields\URL::Name => $this->owner->$fieldName,
 			IndexAction::Name         => IndexAction::Remove,
-		] )->write();
+		] );
 	}
 }

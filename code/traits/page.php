@@ -7,19 +7,19 @@ trait page {
 	 * Add a directory or file via a queued task
 	 */
 	protected function add() {
-		IndexTask::create( [
+		\Injector::inst()->get( 'IndexTask' )->dispatch( [
 			\Modular\Fields\Page::field_name( 'ID' ) => $this->owner->ID,
 			IndexAction::Name                        => IndexAction::Add,
-		] )->write();
+		] );
 	}
 
 	/**
 	 * Remove directory or file via a queued task
 	 */
 	protected function remove() {
-		IndexTask::create( [
+		\Injector::inst()->get( 'IndexTask' )->dispatch( [
 			\Modular\Fields\Page::field_name( 'ID' ) => $this->owner->ID,
 			IndexAction::Name                        => IndexAction::Remove,
-		] )->write();
+		] );
 	}
 }

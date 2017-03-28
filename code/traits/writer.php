@@ -1,6 +1,11 @@
 <?php
 namespace OpenSemanticSearch;
 
+/**
+ * Add onBeforeWrite and onAfterWrite extension hooks to call the exhibiting classes remove() and add() methods
+ *
+ * @package OpenSemanticSearch
+ */
 trait writer {
 	abstract protected function remove();
 
