@@ -8,6 +8,14 @@ namespace OpenSemanticSearch;
 class OSSResult extends OKResult {
 
 	/**
+	 * Return empty list as no models returned by API.
+	 * @return \ArrayList
+	 */
+	public function models() {
+		return new \ArrayList();
+	}
+
+	/**
 	 * @return bool
 	 */
 	public function hasItems() {

@@ -24,13 +24,14 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	/**
 	 * Makes a request and checks it's validity according to it's type. Returns a response corresponding to the type (e.g. SolrJSONResponse). Returns an
 	 *
-	 * @param       $service
-	 * @param       $endpoint
-	 * @param array $params
-	 * @param null  $data
-	 * @param array $tokens
+	 * @param string $service
+	 * @param string $endpoint
+	 * @param array  $params
+	 * @param null   $data
+	 * @param array  $tokens
 	 *
-	 * @return ResultInterface could be an ErrorResponse or e.g. SolrJSONResponse
+	 * @return \OpenSemanticSearch\ResultInterface could be an ErrorResponse or e.g. SolrJSONResponse
+	 * @throws \OpenSemanticSearch\Exception
 	 */
 	public function request( $service, $endpoint, $params = [], $data = null, $tokens = [] ) {
 		// parent::request will call request in http extension
@@ -47,6 +48,7 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	 * @param string $localPath relative to assets folder or absolute from wb root root of file to add to index.
 	 *
 	 * @return bool
+	 * @throws \OpenSemanticSearch\Exception
 	 * @api
 	 */
 	public function addFile( $localPath ) {
@@ -68,6 +70,7 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	 * @param string $localPath relative to assets folder or absolute from wb root root of file to add to index.
 	 *
 	 * @return bool
+	 * @throws \OpenSemanticSearch\Exception
 	 * @api
 	 */
 	public function addDirectory( $localPath ) {
@@ -89,7 +92,9 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	 * @param int|\Page $pageOrID
 	 *
 	 * @return bool
-	 * @throws Exception
+	 * @throws \InvalidArgumentException
+	 * @throws \Modular\Exceptions\Exception
+	 * @throws \OpenSemanticSearch\Exception
 	 */
 	public function addPage( $pageOrID ) {
 		if ( $pageOrID && is_int( $pageOrID ) ) {
@@ -109,6 +114,7 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	 * @param $url
 	 *
 	 * @return bool
+	 * @throws \OpenSemanticSearch\Exception
 	 */
 	public function addURL( $url ) {
 		return $this->request(
@@ -126,6 +132,7 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	 * @param string $localPath relative to assets folder or absolute from web root of file to add to index.
 	 *
 	 * @return bool
+	 * @throws \OpenSemanticSearch\Exception
 	 * @api
 	 */
 	public function removeFile( $localPath ) {
@@ -144,6 +151,7 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	 * @param string $localPath relative to assets folder or absolute from web root of file to add to index.
 	 *
 	 * @return bool
+	 * @throws \OpenSemanticSearch\Exception
 	 * @api
 	 */
 	public function removePath( $localPath ) {
@@ -160,7 +168,9 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	 * @param \Page|int $pageOrID
 	 *
 	 * @return bool
+	 * @throws \InvalidArgumentException
 	 * @throws \Modular\Exceptions\Exception
+	 * @throws \OpenSemanticSearch\Exception
 	 */
 	public function removePage( $pageOrID ) {
 		if ( $pageOrID && is_int( $pageOrID ) ) {
@@ -184,6 +194,7 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	 * @param string $url
 	 *
 	 * @return mixed
+	 * @throws \OpenSemanticSearch\Exception
 	 */
 	public function removeURL( $url ) {
 		return $this->request(
