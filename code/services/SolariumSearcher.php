@@ -1,4 +1,5 @@
 <?php
+
 namespace OpenSemanticSearch;
 
 use Exception;
@@ -37,7 +38,7 @@ class SolariumSearcher extends SolrSearcher {
 		$endpointInit   = array_merge(
 			parse_url( $uri ),
 			[
-				'timeout' => $this->option( $this->option( 'service' ), 'timeout'),
+				'timeout' => $this->option( $this->option( 'service' ), 'timeout' ),
 				'core'    => $this->core(),
 				'key'     => md5( $uri ),
 			]
@@ -76,9 +77,9 @@ class SolariumSearcher extends SolrSearcher {
 			'resultclass' => SolariumResult::class,
 			//			'sort'     => [ self::SortRelevance ],
 		],
-		$include = self::IncludeFiles | self::IncludeLocalPages
+		$include = self::IncludeAll
 	) {
-		$client = new Client($options);
+		$client = new Client( $options );
 
 		$client->addEndpoint( $this->endpoint )
 		       ->setDefaultEndpoint( $this->endpoint );
@@ -109,6 +110,7 @@ class SolariumSearcher extends SolrSearcher {
 				}
 			}
 		}
+
 		/** @var SolariumResult $result */
 		return $client->select( $query );
 	}
@@ -122,6 +124,5 @@ class SolariumSearcher extends SolrSearcher {
 	protected function nativeOptions( $type, array $moduleOptions ) {
 		return $this->arr_to_btf( $moduleOptions, $this->option( $this->option( $type ), 'options' ) ?: [] );
 	}
-
 
 }
