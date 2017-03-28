@@ -4,6 +4,13 @@ namespace OpenSemanticSearch;
 interface ResultInterface {
 
 	/**
+	 * Return a list of models form the response.
+	 *
+	 * @return \SS_List
+	 */
+	public function models();
+
+	/**
 	 * Return the items from the response, e.g. may not be the response itself but a nested array.
 	 *
 	 * @return \Traversable|array

@@ -22,6 +22,14 @@ class ErrorResult extends \Object implements ResultInterface {
 	}
 
 	/**
+	 * Return an empty ArrayList for an error.
+	 * @return \ArrayList
+	 */
+	public function models() {
+		return new \ArrayList();
+	}
+
+	/**
 	 * Return the underlying response data, e.g. response body or json decoded array.
 	 *
 	 * @return mixed
