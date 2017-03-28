@@ -1,11 +1,8 @@
 <?php
-
 use OpenSemanticSearch\IndexInterface;
 use OpenSemanticSearch\SearchInterface;
-use OpenSemanticSearch\Service;
-use OpenSemanticSearch\ServiceInterface;
 
-class OpenSemanticSearchIndexTest extends FunctionalTest {
+class OpenSemanticSearchTest extends FunctionalTest {
 
 	// this will be set to the path where test assets are copied
 	private $testAssetsDir;

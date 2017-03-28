@@ -1,5 +1,7 @@
 <?php
+
 namespace OpenSemanticSearch;
+
 /**
  * http simple http request handling using php file methods and stream contexts
  *
@@ -16,8 +18,9 @@ trait http {
 	 * @param array  $tokens additional tokens to substitute into the uri
 	 *
 	 * @return mixed
+	 * @throws \OpenSemanticSearch\Exception
 	 */
-	protected function request( $service, $endpoint, $params = [], $data = null, $tokens = [] ) {
+	public function request( $service, $endpoint, $params = [], $data = null, $tokens = [] ) {
 		if ( ! $uri = $this->uri( $service, $endpoint, $params, $tokens ) ) {
 			return false;
 		}
@@ -25,9 +28,72 @@ trait http {
 
 		$context = $this->context( $service, $payload );
 
-		if ( false != ( $body = file_get_contents( $uri, null, $context ) ) ) {
-			return $this->decodeResponse( $service, $endpoint, $body );
+		$message = '';
+
+		$previousErrorHandler = set_error_handler( function ( $c, $m ) use ( &$message ) {
+			$message = $m;
+			return false;
+		} );
+		try {
+			// we want to try and handle the error gracefully so suppress messages on the call to file_get_contents
+			if ( false === ( $body = @file_get_contents( $uri, null, $context ) ) ) {
+				if ( ! $message ) {
+
+					if ( isset( $http_response_header[0] ) ) {
+
+						$message = $http_response_header[0];
+
+					}
+					if (!$message) {
+						$oldContext = stream_context_get_options( stream_context_get_default() );
+						stream_context_set_default( stream_context_get_options( $context ) );
+
+						// see if we can get some sensible error info from headers.
+						if ( $headers = get_headers( $uri, 1 ) ) {
+							$message = $headers[0];
+						} else {
+							$message = "Failed to connect to '$uri', no more info available";
+						}
+						stream_context_set_default( $oldContext );
+
+					}
+
+				}
+				throw new Exception( $message );
+			}
+			set_error_handler( $previousErrorHandler );
+
+		} catch ( \Exception $e ) {
+			set_error_handler( $previousErrorHandler );
+
+			throw new Exception( $e->getMessage(), $e->getCode() );
 		}
+
+		return $this->decodeResponse( $service, $endpoint, $body );
+	}
+
+	/**
+	 * Given an array of headers return a map of [ header-name => value ]
+	 *
+	 * @param array $headers
+	 *
+	 * @return array
+	 */
+	protected function parseHTTPResponseHeaders( $headers ) {
+		$head = array();
+		foreach ( $headers as $k => $v ) {
+			$t = explode( ':', $v, 2 );
+			if ( isset( $t[1] ) ) {
+				$head[ trim( $t[0] ) ] = trim( $t[1] );
+			} else {
+				$head[] = $v;
+				if ( preg_match( "#HTTP/[0-9\.]+\s+([0-9]+)#", $v, $out ) ) {
+					$head['reponse_code'] = intval( $out[1] );
+				}
+			}
+		}
+
+		return $head;
 	}
 
 	/**
@@ -41,14 +107,14 @@ trait http {
 	 * @return String
 	 */
 	protected function uri( $service, $endpoint, $params = [], $tokens = [] ) {
-		$uri = $this->setting( $this->setting( $this->setting( 'endpoints' ), $service ), $endpoint );
+		$uri = $this->option( $this->option( $this->option( 'endpoints' ), $service ), $endpoint );
 
 		// replace path tokens here
 
 		$tokens = array_merge(
 			[
 				'endpoint' => $endpoint,
-				'core'     => $this->core()
+				'core'     => $this->core(),
 			],
 			$tokens
 		);
@@ -111,7 +177,7 @@ trait http {
 	 */
 	protected function context( $service, $payload = null, $endpoint = '', $contextOptions = [] ) {
 		$options = array_merge_recursive(
-			$this->setting( 'context_options' )[ $service ] ?: [],
+			$this->option( 'context_options' )[ $service ] ?: [],
 			$contextOptions ?: []
 		);
 		if ( $payload ) {
@@ -132,7 +198,7 @@ trait http {
 	 * @return mixed e.g. an array from json_decode
 	 */
 	protected function decodeResponse( $service, $endpoint = '', $responseBody ) {
-		$method = $this->setting( $this->setting( 'encoding' ), $service ) . 'Decode';
+		$method = $this->option( $this->option( 'encoding' ), $service ) . 'Decode';
 
 		return $this->decode( $responseBody );
 	}
@@ -147,7 +213,7 @@ trait http {
 	 * @return string
 	 */
 	protected function encodeRequest( $service, $endpoint = '', $requestData ) {
-		$method = $this->setting( $this->setting( 'encoding' ), $service ) . 'Encode';
+		$method = $this->option( $this->option( 'encoding' ), $service ) . 'Encode';
 
 		return $this->encode( $requestData );
 	}

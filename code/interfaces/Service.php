@@ -1,7 +1,7 @@
 <?php
 namespace OpenSemanticSearch;
 
-interface ServiceInterface {
+interface ServiceInterface extends \Modular\Interfaces\Service {
 	const IncludeFiles      = 1;
 	const IncludeLocalPages = 2;
 	const IncludeRemoteURLs = 4;

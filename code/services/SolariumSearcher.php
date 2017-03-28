@@ -11,7 +11,7 @@ use Solarium\Core\Client\Endpoint;
  *
  * @package OpenSemanticSearch\Service
  */
-class SolariumSearcher extends Service implements SearchInterface {
+class SolariumSearcher extends SolrSearcher {
 	use array_bitfield_map;
 	use json;
 	use http;
@@ -37,41 +37,12 @@ class SolariumSearcher extends Service implements SearchInterface {
 		$endpointInit   = array_merge(
 			parse_url( $uri ),
 			[
-				'timeout' => $this->setting( 'timeout', $this->setting( 'service' ) ),
+				'timeout' => $this->option( $this->option( 'service' ), 'timeout'),
 				'core'    => $this->core(),
 				'key'     => md5( $uri ),
 			]
 		);
 		$this->endpoint = new Endpoint( $endpointInit );
-	}
-
-	/**
-	 * Find a specific indexed document by id (path)
-	 *
-	 * TODO sort out what to do if indexed https/http
-	 *
-	 * @param string $localPath
-	 *
-	 * @return mixed
-	 */
-	public function findPath( $localPath ) {
-		return $this->search( [ 'id' => self::TypeFile . $this->localToRemotePath( $localPath ) ] );
-	}
-
-	public function findPage( $pageOrID ) {
-		if ( $pageOrID && is_int( $pageOrID ) ) {
-			$page = SiteTree::get()->byID( $pageOrID );
-		} elseif ( $pageOrID instanceof SiteTree ) {
-			$page = $pageOrID;
-		} else {
-			throw new Exception( "Don't know what to do with parameter 'pageOrID', it's not one of those" );
-		}
-
-		return $this->search( [ 'id' => $page->Link() ] );
-	}
-
-	public function findURL( $url ) {
-		return $this->search( [ 'id' => $url ] );
 	}
 
 	/**
@@ -82,7 +53,7 @@ class SolariumSearcher extends Service implements SearchInterface {
 	 * @param array        $options
 	 * @param int          $include
 	 *
-	 * @return \ArrayList
+	 * @return SolariumResult
 	 */
 	public function search(
 		$fullText,
@@ -139,9 +110,7 @@ class SolariumSearcher extends Service implements SearchInterface {
 			}
 		}
 		/** @var SolariumResult $result */
-		$result = $client->select( $query );
-
-		return $this->models( $result );
+		return $client->select( $query );
 	}
 
 	/**
@@ -151,69 +120,8 @@ class SolariumSearcher extends Service implements SearchInterface {
 	 * @return mixed to be fed to native methods
 	 */
 	protected function nativeOptions( $type, array $moduleOptions ) {
-		return $this->arr_to_btf( $moduleOptions, $this->setting( $this->setting( $type ), 'options' ) ?: [] );
+		return $this->arr_to_btf( $moduleOptions, $this->option( $this->option( $type ), 'options' ) ?: [] );
 	}
 
-	/**
-	 * Turn a decoded response from e.g. 'search' into SilverStripe models in a list, e.g of File and Page models.
-	 *
-	 * @param \OpenSemanticSearch\ResultInterface $response e.g. a SolrJSONResponse
-	 * @param int                                 $include
-	 *
-	 * @return \ArrayList
-	 */
-	protected function models( ResultInterface $response, $include = self::IncludeAll ) {
-		$models = new \ArrayList();
-
-		if ( $response->hasItems() ) {
-			$items = $response->items();
-
-			$files = [];
-
-			foreach ( $items as $item ) {
-				$id     = $item['id'];
-				$scheme = parse_url( $id, PHP_URL_SCHEME );
-
-				if ( $scheme == 'file' ) {
-					if ( ( $include & self::IncludeFiles ) === self::IncludeFiles ) {
-						if ( $filePathName = $this->remoteToLocalPath( $id ) ) {
-							$files[] = $filePathName;
-						}
-					}
-				}
-			}
-			// preload files in one hit then can do a 'find' in them.
-			// TODO is this actually faster? Theoretically cuts down number of database accesses...
-			$files = \File::get()->filter( 'Filename', $files );
-			foreach ( $items as $item ) {
-				$id     = $item['id'];
-				$scheme = parse_url( $id, PHP_URL_SCHEME );
-
-				if ( $scheme == 'file' ) {
-					if ( ( $include & self::IncludeFiles ) === self::IncludeFiles ) {
-						if ( $filePathName = $this->remoteToLocalPath( $id ) ) {
-							if ( $file = $files->find( 'Filename', $filePathName ) ) {
-								$models->push( $file );
-							}
-						}
-					}
-				} else if ( $scheme == 'http' || $scheme == 'https' ) {
-					$path = parse_url( $id, PHP_URL_PATH );
-
-					if ( \Director::is_site_url( $id ) ) {
-						if ( ( $include & self::IncludeLocalPages ) === self::IncludeLocalPages ) {
-							if ( $page = \Page::get_by_link( $path ) ) {
-								$models->push( $page );
-							}
-						}
-					} else if ( ( $include & self::IncludeRemoteURLs ) === self::IncludeRemoteURLs ) {
-						$models->push( new Link( [ 'Link' => $path ] ) );
-					}
-				}
-			}
-		}
-
-		return $models;
-	}
 
 }

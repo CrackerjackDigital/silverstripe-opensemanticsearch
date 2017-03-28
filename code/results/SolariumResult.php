@@ -13,11 +13,75 @@ class SolariumResult extends Result implements ResultInterface {
 	}
 
 	/**
+	 * Turn a decoded response from e.g. 'search' into SilverStripe models in a list, e.g of File and Page models.
+	 *
+	 * @param int $include bitfield of what models to include in results
+	 *
+	 * @return \ArrayList
+	 */
+	public function models( $include = ServiceInterface::IncludeAll ) {
+		$models = new \ArrayList();
+
+		$service = SolariumSearcher::get();
+
+		if ( $this->hasItems() ) {
+			$items = $this->items();
+
+			$files = [];
+
+			foreach ( $items as $item ) {
+				$id     = $item['id'];
+				$scheme = parse_url( $id, PHP_URL_SCHEME );
+
+				if ( $scheme == 'file' ) {
+					if ( ( $include & ServiceInterface::IncludeFiles ) === ServiceInterface::IncludeFiles ) {
+						if ( $filePathName = $service->remoteToLocalPath( $id ) ) {
+							$files[] = $filePathName;
+						}
+					}
+				}
+			}
+			// preload files in one hit then can do a 'find' in them.
+			// TODO is this actually faster? Theoretically cuts down number of database accesses...
+			$files = \File::get()->filter( 'Filename', $files );
+			foreach ( $items as $item ) {
+				$id     = $item['id'];
+				$scheme = parse_url( $id, PHP_URL_SCHEME );
+
+				if ( $scheme == 'file' ) {
+					if ( ( $include & ServiceInterface::IncludeFiles ) === ServiceInterface::IncludeFiles ) {
+						if ( $filePathName = $service->remoteToLocalPath( $id ) ) {
+							if ( $file = $files->find( 'Filename', $filePathName ) ) {
+								$models->push( $file );
+							}
+						}
+					}
+				} else if ( $scheme == 'http' || $scheme == 'https' ) {
+					$path = parse_url( $id, PHP_URL_PATH );
+
+					if ( \Director::is_site_url( $id ) ) {
+						if ( ( $include & ServiceInterface::IncludeLocalPages ) === ServiceInterface::IncludeLocalPages ) {
+							if ( $page = \SiteTree::get_by_link( $path ) ) {
+								$models->push( $page );
+							}
+						}
+					} else if ( ( $include & ServiceInterface::IncludeRemoteURLs ) === ServiceInterface::IncludeRemoteURLs ) {
+						$models->push( new Link( [ 'URI' => $path ] ) );
+					}
+				}
+			}
+		}
+
+		return $models;
+	}
+
+	/**
 	 * Returns json_decoded response body.
+	 *
 	 * @return string decoded json
 	 */
 	public function data() {
-		return json_decode($this->getResponse()->getBody());
+		return json_decode( $this->getResponse()->getBody() );
 	}
 
 	/**
@@ -43,6 +107,7 @@ class SolariumResult extends Result implements ResultInterface {
 
 	/**
 	 * Return opposite of isError
+	 *
 	 * @return bool
 	 */
 	public function isOK() {
@@ -53,7 +118,7 @@ class SolariumResult extends Result implements ResultInterface {
 	 * @return bool
 	 */
 	public function isError() {
-		return !$this->getStatus();
+		return ! $this->getStatus();
 	}
 
 	/**

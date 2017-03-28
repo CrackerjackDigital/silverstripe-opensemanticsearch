@@ -6,7 +6,7 @@ namespace OpenSemanticSearch;
  *
  * @package OpenSemanticSearch
  */
-class RestfulService extends Service {
+abstract class RestfulService extends Service {
 	use http;
 	use json;
 

@@ -1,7 +1,7 @@
 <?php
 namespace OpenSemanticSearch;
 
-interface ResultInterface extends ServiceInterface {
+interface ResultInterface {
 
 	/**
 	 * Return the items from the response, e.g. may not be the response itself but a nested array.

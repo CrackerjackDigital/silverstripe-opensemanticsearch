@@ -7,7 +7,4 @@ namespace OpenSemanticSearch;
  * @package OpenSemanticSearch
  */
 class Link extends \DataObject {
-	private static $db = [
-		'Link' => 'Text'
-	];
 }

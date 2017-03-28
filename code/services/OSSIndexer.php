@@ -1,10 +1,8 @@
 <?php
 namespace OpenSemanticSearch;
 
-require_once( __DIR__ . '/../traits/json.php' );
-
 use Modular\Exceptions\Exception;
-use Page;
+use Modular\Exceptions\NotImplemented;
 use SiteTree;
 
 /**
@@ -16,11 +14,34 @@ use SiteTree;
  * @package OpenSemanticSearch
  */
 class OSSIndexer extends RestfulService implements IndexInterface {
-	const ServiceOSS  = self::TypeOSS;
+	const ServiceOSS = self::TypeOSS;
 
 	const EndpointIndexDir  = 'index-dir';
 	const EndpointIndexFile = 'index-file';
 	const EndpointIndexURL  = 'index-web';
+	const EndpointRemove    = 'delete';
+
+	/**
+	 * Makes a request and checks it's validity according to it's type. Returns a response corresponding to the type (e.g. SolrJSONResponse). Returns an
+	 *
+	 * @param       $service
+	 * @param       $endpoint
+	 * @param array $params
+	 * @param null  $data
+	 * @param array $tokens
+	 *
+	 * @return ResultInterface could be an ErrorResponse or e.g. SolrJSONResponse
+	 */
+	public function request( $service, $endpoint, $params = [], $data = null, $tokens = [] ) {
+		// parent::request will call request in http extension
+		if ( false !== ( $decoded = parent::request( $service, $endpoint, $params, $data, $tokens ) ) ) {
+			$response = OSSResult::create( $decoded );
+		} else {
+			$response = ErrorResult::create( "Request returned no valid data", print_r( $decoded, true ) );
+		}
+
+		return $response;
+	}
 
 	/**
 	 * @param string $localPath relative to assets folder or absolute from wb root root of file to add to index.
@@ -71,14 +92,15 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	 * @throws Exception
 	 */
 	public function addPage( $pageOrID ) {
-		if ($pageOrID && is_int($pageOrID)) {
-			$page = SiteTree::get()->byID($pageOrID);
-		} elseif ($pageOrID instanceof SiteTree) {
+		if ( $pageOrID && is_int( $pageOrID ) ) {
+			$page = SiteTree::get()->byID( $pageOrID );
+		} elseif ( $pageOrID instanceof SiteTree ) {
 			$page = $pageOrID;
 		} else {
-			throw new Exception("Don't know what to do with parameter 'pageOrID', it's not one of those");
+			throw new Exception( "Don't know what to do with parameter 'pageOrID', it's not one of those" );
 		}
-		return $this->addURL($page->Link());
+
+		return $this->addURL( $page->Link() );
 	}
 
 	/**
@@ -117,27 +139,6 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	}
 
 	/**
-	 * Makes a request and checks it's validity according to it's type. Returns a response corresponding to the type (e.g. SolrJSONResponse). Returns an
-	 *
-	 * @param       $service
-	 * @param       $endpoint
-	 * @param array $params
-	 * @param null  $data
-	 * @param array $tokens
-	 *
-	 * @return ResultInterface could be an ErrorResponse or e.g. SolrJSONResponse
-	 */
-	protected function request( $service, $endpoint, $params = [], $data = null, $tokens = [] ) {
-		if ( $decoded = $this->httpRequest( $service, $endpoint, $params, $data, $tokens ) ) {
-			$response = OSSResult::create( $decoded );
-		} else {
-			$response = ErrorResult::create( "Request returned no valid data", print_r( $decoded, true ) );
-		}
-
-		return $response;
-	}
-
-	/**
 	 * Removes a file or directory from index.
 	 *
 	 * @param string $localPath relative to assets folder or absolute from web root of file to add to index.
@@ -146,16 +147,37 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	 * @api
 	 */
 	public function removePath( $localPath ) {
-		// TODO: Implement removePath() method.
+		return $this->request(
+			self::ServiceOSS,
+			self::EndpointRemove,
+			[
+				'uri' => $this->localToRemotePath( $localPath ),
+			]
+		)->isOK();
 	}
 
 	/**
-	 * @param Page|int $pageOrID
+	 * @param \Page|int $pageOrID
 	 *
 	 * @return bool
+	 * @throws \Modular\Exceptions\Exception
 	 */
 	public function removePage( $pageOrID ) {
-		// TODO: Implement removePage() method.
+		if ( $pageOrID && is_int( $pageOrID ) ) {
+			$page = SiteTree::get()->byID( $pageOrID );
+		} elseif ( $pageOrID instanceof SiteTree ) {
+			$page = $pageOrID;
+		} else {
+			throw new Exception( "Don't know what to do with parameter 'pageOrID', it's not one of those" );
+		}
+
+		return $this->request(
+			self::ServiceOSS,
+			self::EndpointRemove,
+			[
+				'uri' => $page->Link()
+			]
+		)->isOK();
 	}
 
 	/**
@@ -164,6 +186,14 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	 * @return mixed
 	 */
 	public function removeURL( $url ) {
-		// TODO: Implement removeURL() method.
+		return $this->request(
+			self::ServiceOSS,
+			self::EndpointRemove,
+			[
+				'uri' => $url
+			]
+		)->isOK();
 	}
+
+
 }

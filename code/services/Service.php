@@ -1,8 +1,6 @@
 <?php
 namespace OpenSemanticSearch;
 
-require_once( __DIR__ . '/../traits/json.php' );
-
 use Controller;
 
 /**
@@ -14,8 +12,9 @@ use Controller;
  * @package OpenSemanticSearch
  */
 abstract class Service extends \Object implements ServiceInterface {
-
-	// current configured environment, set in ctor
+	// ctor provided options, may be combined with e.g. options passed as a parameter or config options.
+	protected $options;
+	// current configured environment, set in ctor, may override config.environment if set
 	protected $env;
 
 	// tokens in uris start with this
@@ -26,6 +25,9 @@ abstract class Service extends \Object implements ServiceInterface {
 
 	// what configuration to use
 	private static $environment = SS_ENVIRONMENT_TYPE;
+
+	// override to supply name of Injector service or class to use for this service.
+	private static $service_name = '';
 
 	/**
 	 * Map of encodings to return depending on the environment, the encoding will eventually be called through as e.g. 'jsonEncode' or 'xmlDecode'
@@ -76,11 +78,40 @@ abstract class Service extends \Object implements ServiceInterface {
 	/**
 	 * Service constructor.
 	 *
+	 * @param null   $options
 	 * @param string $env override the configured environment, e.g. for testing or selecting a different core/service
 	 */
-	public function __construct( $env = '' ) {
-		$this->env = $this->env( $env );
+	public function __construct( $options = null, $env = '' ) {
+		$this->options = $options;
+		$this->env     = $this->env( $env );
 		parent::__construct();
+	}
+
+	/**
+	 * Return a configured instance of the service via config.service_name, self.ServiceName or the called class name.
+	 *
+	 * @param mixed  $options
+	 * @param string $env
+	 *
+	 * @return \OpenSemanticSearch\IndexInterface|\OpenSemanticSearch\SearchInterface
+	 */
+	public static function get( $options = null, $env = '' ) {
+		$serviceName = static::config()->get( 'service_name' )
+			?: static::ServiceName
+				?: get_called_class();
+
+		return \Injector::inst()->create( $serviceName, $options, $env );
+	}
+
+	/**
+	 * Alternate way to call a method via Service interface, e.g. if calling form a QueuedServiceTask.
+	 *
+	 * @param null $params
+	 *
+	 * @return mixed
+	 */
+	public function execute( $params = null) {
+		return call_user_func_array( [ $this, $params ], func_get_args());
 	}
 
 	/**
@@ -94,10 +125,11 @@ abstract class Service extends \Object implements ServiceInterface {
 
 	/**
 	 * Returns the core name for the current SS environment
+	 *
 	 * @return string e.g. 'core1'
 	 */
 	public function core() {
-		return $this->setting('core');
+		return $this->option( 'core' );
 	}
 
 	/**
@@ -110,7 +142,7 @@ abstract class Service extends \Object implements ServiceInterface {
 	 * @return mixed e.g. an array from json_decode
 	 */
 	protected function decodeResponse( $service, $endpoint = '', $responseBody ) {
-		$method = $this->setting( $this->setting( 'encoding' ), $service ) . 'Decode';
+		$method = $this->option( $this->option( 'encoding' ), $service ) . 'Decode';
 
 		return $this->decode( $responseBody );
 	}
@@ -122,7 +154,7 @@ abstract class Service extends \Object implements ServiceInterface {
 	 *
 	 * @return mixed
 	 */
-	abstract public function decode($data);
+	abstract public function decode( $data );
 
 	/**
 	 * Encode request data to something the service at the other end can understand, e.g. json. Set the correct headers for the service etc
@@ -134,7 +166,7 @@ abstract class Service extends \Object implements ServiceInterface {
 	 * @return string
 	 */
 	protected function encodeRequest( $service, $endpoint = '', $requestData ) {
-		$method = $this->setting( $this->setting( 'encoding' ), $service ) . 'Encode';
+		$method = $this->option( $this->option( 'encoding' ), $service ) . 'Encode';
 
 		return $this->encode( $requestData );
 	}
@@ -142,7 +174,7 @@ abstract class Service extends \Object implements ServiceInterface {
 	/**
 	 * Should be provided in a derived class, e.g via the json trait
 	 */
-	abstract public function encode($data);
+	abstract public function encode( $data );
 
 	/**
 	 * Returns a built token for a name ready to replace in a string.
@@ -175,24 +207,22 @@ abstract class Service extends \Object implements ServiceInterface {
 	 * @return string|bool path relative to web root or empty string if doesn't exist or false if it is not Safe.
 	 */
 	public function relativePath( $path ) {
-		$out = '';
 		if ( substr( $path, 0, 1 ) == DIRECTORY_SEPARATOR ) {
 			// if absolute then must start with web root or first part of path must be under web root
 			if ( ! substr( $path, 0, strlen( BASE_PATH ) ) == BASE_PATH ) {
 				$pathStart = substr( $path, strlen( BASE_PATH ) );
 
 				if ( ! realpath( Controller::join_links( BASE_PATH, $pathStart ) ) ) {
-					return '';
+					$path = '';
 				}
 			} else {
-				$out = substr( $path, strlen( BASE_PATH ) );
+				$path = substr( $path, strlen( BASE_PATH ) );
 			}
 		} else {
-			// if relative then relative to assets directory
-			$out = ASSETS_DIR . DIRECTORY_SEPARATOR . $path;
+			$path = DIRECTORY_SEPARATOR . $path;
 		}
 
-		return $this->isSafe( $out ) ? $out : '';
+		return $this->isSafe( $path ) ? $path : '';
 
 	}
 
@@ -208,7 +238,7 @@ abstract class Service extends \Object implements ServiceInterface {
 	 */
 	public function isSafe( $path ) {
 		if ( $path ) {
-			$safePaths = array_keys( $this->setting( 'path_map' ) );
+			$safePaths = array_keys( $this->option( 'path_map' ) );
 
 			foreach ( $safePaths as $safePath ) {
 				if ( substr( $safePath, 0, 1 ) == DIRECTORY_SEPARATOR ) {
@@ -247,7 +277,7 @@ abstract class Service extends \Object implements ServiceInterface {
 		$localPath = parse_url( $localPath, PHP_URL_PATH );
 
 		if ( $path = $this->relativePath( $localPath ) ) {
-			if ( $map = $this->setting( 'path_map' ) ) {
+			if ( $map = $this->option( 'path_map' ) ) {
 				// e.g. local = '/assets/', remote = '/mnt/files/assets/'
 				foreach ( $map as $local => $remote ) {
 
@@ -274,7 +304,7 @@ abstract class Service extends \Object implements ServiceInterface {
 	 */
 	public function remoteToLocalPath( $remotePath ) {
 		$path = parse_url( $remotePath, PHP_URL_PATH );
-		if ( $map = $this->setting( 'path_map' ) ) {
+		if ( $map = $this->option( 'path_map' ) ) {
 			// e.g. local = '/assets/', remote = '/mount/files/assets/'
 			foreach ( $map as $local => $remote ) {
 
@@ -304,8 +334,8 @@ abstract class Service extends \Object implements ServiceInterface {
 	 *
 	 * @return mixed
 	 */
-	public function setting( $config, $key = '' ) {
-		$data = (is_array( $config ) ? $config : ( $this->config()->get( $config ) ?: [] )) ?: [];
+	public function option( $config, $key = '' ) {
+		$data = ( is_array( $config ) ? $config : ( $this->config()->get( $config ) ?: [] ) ) ?: [];
 		$key  = $key ?: $this->env;
 
 		foreach ( $data as $match => $value ) {

@@ -1,7 +1,7 @@
 <?php
 namespace OpenSemanticSearch;
 
-interface SearchInterface extends PathMappingInterface {
+interface SearchInterface extends PathMappingInterface, ServiceInterface {
 	const ServiceName       = 'SearchService';
 	const FilterYear        = 'year';
 	const FilterContentType = 'type';

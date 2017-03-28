@@ -1,6 +1,8 @@
 <?php
 namespace OpenSemanticSearch;
 
+use Modular\Exceptions\Exception;
+
 class OSSController extends \ContentController {
 	private static $allowed_actions = [
 		'search' => '->canSearch'
@@ -28,15 +30,23 @@ class OSSController extends \ContentController {
 
 		$results = new \ArrayList();
 
+		$message = '';
+
 		if ($terms) {
-			/** @var SearchInterface $service */
-			$service = \Injector::inst()->get(SearchInterface::ServiceName);
-			$results = $service->search($terms);
+			try {
+				/** @var SearchInterface $service */
+				$service = \Injector::inst()->get(SearchInterface::ServiceName);
+
+				$results = $service->search( $terms );
+			} catch (\Exception $e) {
+				$message = 'Sorry, there was a problem with your request, please try again later';
+			}
 		}
 		return $this->renderWith(
 			$this->config()->get('results_templates'),
 			new \ArrayData([
-				'Results' => new \PaginatedList($results)
+				'Results' => new \PaginatedList($results),
+			    'Message' => $message
 			])
 		);
 	}

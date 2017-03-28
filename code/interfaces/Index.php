@@ -1,10 +1,8 @@
 <?php
 namespace OpenSemanticSearch;
 
-use Page;
-
-interface IndexInterface extends PathMappingInterface {
-	const ServiceName = 'IndexInterface';
+interface IndexInterface extends PathMappingInterface, ServiceInterface {
+	const ServiceName = 'IndexService';
 
 	/**
 	 * @param string $localPath relative to assets folder or absolute from wb root root of file to add to index.
@@ -25,7 +23,7 @@ interface IndexInterface extends PathMappingInterface {
 	/**
 	 * Add a specific page to the index by page id or page object. This will be added as it can be seen rendered in the browser.
 	 *
-	 * @param Page|int $pageOrID
+	 * @param \Page|int $pageOrID
 	 *
 	 * @return bool
 	 */
@@ -51,7 +49,7 @@ interface IndexInterface extends PathMappingInterface {
 	public function removePath( $localPath );
 
 	/**
-	 * @param Page|int $pageOrID
+	 * @param \Page|int $pageOrID
 	 *
 	 * @return bool
 	 */

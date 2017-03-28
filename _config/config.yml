@@ -6,15 +6,37 @@ Injector:
     class: 'OpenSemanticSearch\SolariumSearcher'
   IndexService:
     class: 'OpenSemanticSearch\OSSIndexer'
+  IndexTask:
+    class: 'OpenSemanticSearch\IndexTask'
+  FileInfoTask:
+    class: 'OpenSemanticSearch\FileInfoTask'
 OpenSemanticSearch\Query:
   extensions:
     - 'OpenSemanticSearch\MetaDataExtension'
+Link:
+  extensions:
+    - 'Modular\Fields\Title'
+    - 'Modular\Fields\Description'
+    - 'Modular\Fields\URL'
+    - 'OpenSemanticSearch\URLExtension'
 File:
   extensions:
     - 'OpenSemanticSearch\MetaDataExtension'
+#   - 'OpenSemanticSearch\FileExtension'              # add in site config for 'normal' files
+#   - 'OpenSemanticSearch\VersionedFileExtension'     # add in site config for 'versioned' files
 Page:
   extensions:
     - 'OpenSemanticSearch\MetaDataExtension'
+    - 'OpenSemanticSearch\PageExtension'
+OpenSemanticSearch\IndexTask:
+  extensions:
+    - 'Modular\Fields\URL'
+    - 'Modular\Fields\File'
+    - 'Modular\Fields\Page'
+    - 'OpenSemanticSearch\IndexAction'
+OpenSemanticSearch\FileInfoTask:
+  extensions:
+    - 'Modular\Fields\File'
 
 # add the following in app config for files
 # File:
