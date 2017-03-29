@@ -8,7 +8,7 @@ Injector:
     class: 'OpenSemanticSearch\OSSIndexer'
   IndexTask:
     class: 'OpenSemanticSearch\IndexTask'
-  FileInfoTask:
+  InfoTask:
     class: 'OpenSemanticSearch\FileInfoTask'
 OpenSemanticSearch\Query:
   extensions:
