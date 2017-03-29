@@ -26,16 +26,20 @@ class InfoTask extends QueuedTask {
 	private static $plural_name = 'Information retrieval Tasks';
 
 	/**
-	 * @param null $params
+	 * @param null   $params
+	 *
+	 * @param string $resultMessage
 	 *
 	 * @return mixed|void
 	 * @throws \InvalidArgumentException
 	 * @throws \Modular\Exceptions\Exception
 	 */
-	public function execute( $params = null ) {
+	public function execute( $params = null, &$resultMessage = '' ) {
 		set_time_limit( $this->timeout() );
 
 		$files = \File::get();
+
+		$resultMessage = '';
 
 		if ( isset( $params[ self::FilterParam ] ) ) {
 			$filter = $params[self::FilterParam];
@@ -51,10 +55,12 @@ class InfoTask extends QueuedTask {
 					'ID' => $filter
 				]);
 			} else {
-				$this->debug_fail( new Exception( "Bad filter parameter '" . $filter . "'") );
+				$resultMessage = "Bad filter parameter '" . $filter . "'";
+				$this->debug_fail( new Exception( $resultMessage) );
 			}
 		} else {
-			$this->debug_fail( new Exception("No filter parameter, this needs to be supplied"));
+			$resultMessage = "No filter parameter, this needs to be supplied";
+			$this->debug_fail( new Exception($resultMessage));
 		}
 		if (isset($params[self::LimitParam])) {
 			$limit = $params[self::LimitParam];

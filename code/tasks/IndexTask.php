@@ -30,22 +30,26 @@ class IndexTask extends QueuedTask {
 		'EndDate'     => 'Ended',
 	];
 
+	private static $default_sort = 'ID desc';
+
 	/**
 	 * Check the IndexAction and perform that action on either the related File, Page or the value of the URL field. If both ReIndex is provided then
 	 * a Remove then an Add is made.
 	 *
 	 * @param string $params if provided then e.g. IndexAction.Add or IndexAction.Remove, otherwise the Task.IndexAction field value will be used.
 	 *
+	 * @param string $resultMessage
+	 *
 	 * @return mixed|void
 	 */
-	public function execute( $params = null ) {
+	public function execute( $params = null, &$resultMessage = '' ) {
 		$this->trackable_start(__FUNCTION__, "Processing task '$this->Title'");
 
 		set_time_limit( $this->timeout() );
 
 		$res = false;
 
-		$message = '';
+		$resultMessage = '';
 
 		try {
 			$this()->update( [
@@ -88,20 +92,20 @@ class IndexTask extends QueuedTask {
 					}
 				}
 			}
-			$message = 'OK';
+			$resultMessage = 'OK';
 		} catch ( \Exception $e ) {
 			$res = false;
-			$message = $e->getMessage();
+			$resultMessage = $e->getMessage();
 		}
 
 		if ( $res ) {
-			$this->success($message);
+			$this->success($resultMessage);
 
 		} else {
-			$this->fail($message);
+			$this->fail($resultMessage);
 		}
-
-		$this->trackable_end($message);
+		$resultMessage = "task ended with: '$resultMessage'";
+		$this->trackable_end($resultMessage);
 	}
 
 	public function onBeforeWrite() {
