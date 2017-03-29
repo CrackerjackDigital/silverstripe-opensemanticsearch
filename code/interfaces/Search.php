@@ -58,4 +58,6 @@ interface SearchInterface extends PathMappingInterface, ServiceInterface {
 		],
 		$include = self::IncludeAll
 	);
+
+	public function searchByID($id);
 }

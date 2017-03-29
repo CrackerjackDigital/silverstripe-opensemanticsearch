@@ -11,7 +11,7 @@ use Modular\Tasks\QueuedTask;
  *
  * @package OpenSemanticSearch
  */
-class InfoTask extends QueuedTask {
+class FileInfoTask extends QueuedTask {
 	const QueueName = 'OpenSemanticSearch';
 
 	const LimitParam = 'limit';
@@ -59,8 +59,10 @@ class InfoTask extends QueuedTask {
 				$this->debug_fail( new Exception( $resultMessage) );
 			}
 		} else {
-			$resultMessage = "No filter parameter, this needs to be supplied";
-			$this->debug_fail( new Exception($resultMessage));
+
+			$files = $files->filter( [
+				'ID' => $this->{FileField::field_name()}
+			] );
 		}
 		if (isset($params[self::LimitParam])) {
 			$limit = $params[self::LimitParam];

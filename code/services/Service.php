@@ -1,4 +1,5 @@
 <?php
+
 namespace OpenSemanticSearch;
 
 use Controller;
@@ -110,8 +111,8 @@ abstract class Service extends \Object implements ServiceInterface {
 	 *
 	 * @return mixed
 	 */
-	public function execute( $params = null) {
-		return call_user_func_array( [ $this, $params ], func_get_args());
+	public function execute( $params = null ) {
+		return call_user_func_array( [ $this, $params ], func_get_args() );
 	}
 
 	/**
@@ -208,15 +209,18 @@ abstract class Service extends \Object implements ServiceInterface {
 	 */
 	public function relativePath( $path ) {
 		if ( substr( $path, 0, 1 ) == DIRECTORY_SEPARATOR ) {
-			// if absolute then must start with web root or first part of path must be under web root
-			if ( ! substr( $path, 0, strlen( BASE_PATH ) ) == BASE_PATH ) {
-				$pathStart = substr( $path, strlen( BASE_PATH ) );
+			// we start with '/'
+			if ( substr( $path, 0, strlen( BASE_PATH ) ) == BASE_PATH ) {
+				// trim off the base path
+				$path = substr( $path, strlen( BASE_PATH ) );
 
-				if ( ! realpath( Controller::join_links( BASE_PATH, $pathStart ) ) ) {
+			} else {
+				// not under base path, try adding the base path at the start, realpath should fail if we're somewhere bad
+				$absPath = Controller::join_links( BASE_PATH, $path );
+
+				if ( ! realpath( $absPath ) ) {
 					$path = '';
 				}
-			} else {
-				$path = substr( $path, strlen( BASE_PATH ) );
 			}
 		} else {
 			$path = DIRECTORY_SEPARATOR . $path;

@@ -6,7 +6,7 @@ namespace OpenSemanticSearch;
  *
  * @package OpenSemanticSearch
  */
-trait deleter {
+trait remover {
 	abstract public function remove();
 
 	/**

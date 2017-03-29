@@ -8,13 +8,15 @@ namespace OpenSemanticSearch;
  */
 trait before_write {
 	/**
-	 * Dispatch a ReIndex task to run
+	 * Reindex the exhibiting model
+	 *
 	 * @return mixed
 	 */
 	abstract protected function reindex();
 
 	/**
-	 * Dispatch an FileInfoTask to run
+	 * Retrieve info for the exhibiting model
+	 *
 	 * @return mixed
 	 */
 	abstract protected function reinfo();

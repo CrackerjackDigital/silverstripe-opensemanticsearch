@@ -18,7 +18,7 @@ abstract class SolrSearcher extends Service implements SearchInterface {
 	 * @return mixed
 	 */
 	public function findPath( $localPath ) {
-		return $this->search( [ 'id' => self::TypeFile . $this->localToRemotePath( $localPath ) ] );
+		return $this->searchByID( self::TypeFile . $this->localToRemotePath( $localPath ) );
 	}
 
 	public function findPage( $pageOrID ) {

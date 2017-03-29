@@ -6,14 +6,27 @@ namespace OpenSemanticSearch;
  *
  * @package OpenSemanticSearch
  */
-trait onestep_writer {
+trait after_write {
+	/**
+	 * Reindex the exhibiting model
+	 *
+	 * @return mixed
+	 */
 	abstract protected function reindex();
+
+	/**
+	 * Retrieve info for the exhibiting model
+	 *
+	 * @return mixed
+	 */
+	abstract protected function reinfo();
 
 	/**
 	 * Add file to index
 	 */
 	public function onAfterWrite() {
 		$this->reindex();
+		$this->reinfo();
 		parent::onAfterWrite();
 	}
 

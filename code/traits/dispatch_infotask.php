@@ -3,7 +3,12 @@ namespace OpenSemanticSearch;
 
 use Modular\Fields\Title;
 
-trait infotask {
+/**
+ * dispatch_infotask queues a FileInfoTask for later
+ *
+ * @package OpenSemanticSearch
+ */
+trait dispatch_infotask {
 	/**
 	 * @return \DataObject
 	 */
@@ -14,7 +19,7 @@ trait infotask {
 	 */
 	protected function infotask() {
 		\Injector::inst()->get( 'FileInfoTask' )->dispatch( [
-			Title::Name                              => "Add '" . $this->owner()->Title . "'",
+			Title::Name                              => "Get Info for '" . $this->owner()->Title . "'",
 			IndexAction::Name                        => IndexAction::Add,
 			\Modular\Fields\File::field_name( 'ID' ) => $this->owner()->ID,
 		] );

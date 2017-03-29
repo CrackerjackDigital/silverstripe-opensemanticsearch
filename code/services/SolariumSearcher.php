@@ -46,15 +46,30 @@ class SolariumSearcher extends SolrSearcher {
 		$this->endpoint = new Endpoint( $endpointInit );
 	}
 
+	public function searchByID($id, $options = [
+		'resultclass' => SolariumResult::class,
+	]) {
+		$client = $this->createClient( $options);
+		$query = $client->createSelect();
+
+		$id = $query->getHelper()->escapeTerm( $id);
+
+		$query->setQuery( "id:$id");
+
+		return $client->select( $query);
+	}
+
 	/**
 	 * @param array|string $fullText
 	 * @param array        $fields
-	 * @param array        $facets
 	 * @param array        $filters
+	 * @param array        $facets
 	 * @param array        $options
 	 * @param int          $include
 	 *
-	 * @return SolariumResult
+	 * @return \OpenSemanticSearch\SolariumResult
+	 * @throws \Solarium\Exception\InvalidArgumentException
+	 * @throws \Solarium\Exception\OutOfBoundsException
 	 */
 	public function search(
 		$fullText,
@@ -79,10 +94,7 @@ class SolariumSearcher extends SolrSearcher {
 		],
 		$include = self::IncludeAll
 	) {
-		$client = new Client( $options );
-
-		$client->addEndpoint( $this->endpoint )
-		       ->setDefaultEndpoint( $this->endpoint );
+		$client = $this->createClient($options);
 
 		$query = $client->createSelect( $options );
 
@@ -113,6 +125,21 @@ class SolariumSearcher extends SolrSearcher {
 
 		/** @var SolariumResult $result */
 		return $client->select( $query );
+	}
+
+	/**
+	 * Creates a Solarium client configured for the correct endpoint for the environment we're running in.
+	 * @param $options
+	 *
+	 * @return \Solarium\Core\Client\Client
+	 * @throws \Solarium\Exception\InvalidArgumentException
+	 * @throws \Solarium\Exception\OutOfBoundsException
+	 */
+
+	public function createClient($options) {
+		return (new Client( $options ))
+			->addEndpoint( $this->endpoint )
+			->setDefaultEndpoint( $this->endpoint );
 	}
 
 	/**

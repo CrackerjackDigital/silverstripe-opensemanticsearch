@@ -1,15 +1,14 @@
 <?php
-
 namespace OpenSemanticSearch;
 
 use Modular\Fields\Title;
 
 /**
- * dispatch_indextask queues an IndexTask for later
+ * execute_infotask immediately executes a FileInfoTask
  *
  * @package OpenSemanticSearch
  */
-trait dispatch_indextask {
+trait execute_infotask {
 	/**
 	 * @return \DataObject
 	 */
@@ -18,8 +17,8 @@ trait dispatch_indextask {
 	/**
 	 * Add a directory or file via a queued task
 	 */
-	protected function indextask() {
-		\Injector::inst()->get( 'IndexTask' )->dispatch( [
+	protected function infotask() {
+		\Injector::inst()->get( 'FileInfoTask' )->execute( [
 			Title::Name                              => "Add '" . $this->owner()->Title . "'",
 			IndexAction::Name                        => IndexAction::Add,
 			\Modular\Fields\File::field_name( 'ID' ) => $this->owner()->ID,

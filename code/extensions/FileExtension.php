@@ -11,8 +11,14 @@ use DataExtension;
  * @property \DataObject owner
  */
 class FileExtension extends DataExtension {
-	use writer;
-	use deleter;
+	use after_write;
+	use remover;
 	use file;
+	use dispatch_indextask {
+		indextask as reindex;
+	}
+	use dispatch_infotask {
+		infotask as reinfo;
+	}
 
 }
