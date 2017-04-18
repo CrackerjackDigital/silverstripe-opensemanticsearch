@@ -1,5 +1,5 @@
 <?php
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Interfaces;
 
 interface ResultInterface {
 

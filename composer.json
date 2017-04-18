@@ -27,12 +27,17 @@
 	"require": {
 		"php": ">=5.4",
 		"silverstripe/framework": ">=3.1",
-		"solarium/solarium": "~3.8"
+		"solarium/solarium": "~3.8",
+		"crackerjackdigital/modular-queue": "dev-develop"
 	},
 	"repositories": [
 		{
 			"type": "vcs",
 			"url": "https://github.com/CrackerjackDigital/silverstripe-opensemanticsearch.git"
+		},
+		{
+			"type": "vcs",
+			"url": "https://github.com/CrackerjackDigital/silverstripe-modular-queue.git"
 		}
 	],
 	"extra": {

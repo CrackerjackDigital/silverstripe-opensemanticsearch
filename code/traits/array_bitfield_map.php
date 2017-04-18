@@ -1,5 +1,5 @@
 <?php
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Traits;
 
 trait array_bitfield_map {
 	/**

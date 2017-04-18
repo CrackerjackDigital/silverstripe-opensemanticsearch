@@ -1,8 +1,10 @@
 <?php
 
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Services;
 
 use Controller;
+use Modular\Traits\debugging;
+use OpenSemanticSearch\Interfaces\ServiceInterface;
 
 /**
  * Service represents an Open Semantic Search service which consists of two parts, the OSS provided service which adds, removes and updates
@@ -13,6 +15,8 @@ use Controller;
  * @package OpenSemanticSearch
  */
 abstract class Service extends \Object implements ServiceInterface {
+	use debugging;
+
 	// ctor provided options, may be combined with e.g. options passed as a parameter or config options.
 	protected $options;
 	// current configured environment, set in ctor, may override config.environment if set
@@ -94,7 +98,7 @@ abstract class Service extends \Object implements ServiceInterface {
 	 * @param mixed  $options
 	 * @param string $env
 	 *
-	 * @return \OpenSemanticSearch\IndexInterface|\OpenSemanticSearch\SearchInterface
+	 * @return \OpenSemanticSearch\Interfaces\IndexInterface|\OpenSemanticSearch\Interfaces\SearchInterface|\OpenSemanticSearch\Interfaces\MetaDataInterface
 	 */
 	public static function get( $options = null, $env = '' ) {
 		$serviceName = static::config()->get( 'service_name' )
@@ -107,11 +111,11 @@ abstract class Service extends \Object implements ServiceInterface {
 	/**
 	 * Alternate way to call a method via Service interface, e.g. if calling form a QueuedServiceTask.
 	 *
-	 * @param null $params
+	 * @param array|\ArrayAccess $params
 	 *
 	 * @return mixed
 	 */
-	public function execute( $params = null ) {
+	public function execute( $params = [], &$resultMessage = '' ) {
 		return call_user_func_array( [ $this, $params ], func_get_args() );
 	}
 

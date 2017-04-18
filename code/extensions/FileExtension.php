@@ -1,24 +1,15 @@
 <?php
-namespace OpenSemanticSearch;
-
-use DataExtension;
+namespace OpenSemanticSearch\Extensions;
 
 /**
- * FileExtension added to File (not versioned files, they have their own extension).
+ * Extension to add to files to add, remove and gather meta data from them.
  *
  * @package OpenSemanticSearch
  *
- * @property \DataObject owner
  */
-class FileExtension extends DataExtension {
-	use after_write;
-	use remover;
-	use file;
-	use dispatch_indextask {
-		indextask as reindex;
-	}
-	use dispatch_infotask {
-		infotask as reinfo;
+class FileExtension extends ModelExtension {
+	public function OSSID() {
+		return $this->owner()->Filename;
 	}
 
 }

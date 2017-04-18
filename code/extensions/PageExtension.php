@@ -1,24 +1,18 @@
 <?php
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Extensions;
+
+use OpenSemanticSearch\Interfaces\OSSID;
 
 /**
- * Extension to add to Pages
+ * Extension to add to Pages to control adding, removing and meta data tasks
+ * when they are published and unpublished.
  *
  * @package OpenSemanticSearch
  * @property \Page owner
  */
-class PageExtension extends \SiteTreeExtension {
-	use versioned;
-	use page;
-	use dispatch_indextask {
-		indextask as reindex;
-	}
-	use dispatch_infotask {
-		infotask as reinfo;
-	}
-
-	public function owner() {
-		return $this->owner;
+class PageExtension extends VersionedModelExtension implements OSSID {
+	public function OSSID() {
+		return $this->owner()->Link();
 	}
 
 }

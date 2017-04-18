@@ -1,5 +1,5 @@
 <?php
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Fields;
 
 use Modular\Fields\Enum;
 use Modular\Types\OptionType;

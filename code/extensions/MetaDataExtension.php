@@ -1,5 +1,6 @@
 <?php
-namespace OpenSemanticSearch;
+
+namespace OpenSemanticSearch\Extensions;
 
 use DataExtension;
 
@@ -7,18 +8,20 @@ use DataExtension;
  * Adds the meta data that OSS extracts or can return to models (generally files)
  *
  * @package OpenSemanticSearch
+ * @property string $OSSID
+ * @property string $OSSAuthor
+ * @property string $OSSPath
+ * @property string $OSSRetrievedDate
  */
 class MetaDataExtension extends DataExtension {
-	const IDField       = 'OSSID';              // name of ID field
-	const AuthorField   = 'OSSAuthor';          // field for authors
-	const PathField     = 'OSSPath';            // path on service (e.g Solr)
-	const InfoDateField = 'OSSInfoDate';        // date info was last updated for this file
+	const AuthorField        = 'OSSAuthor';          // field for authors
+	const PathField          = 'OSSPath';            // path on service (e.g Solr)
+	const RetrievedDateField = 'OSSRetrievedDate';   // date meta data was last updated for this file
 
 	private static $db = [
-		self::IDField       => 'Text',
-		self::AuthorField   => 'Text',
-		self::PathField     => 'Text',
-		self::InfoDateField => 'SS_DateTime',
+		self::AuthorField        => 'Text',
+		self::PathField          => 'Text',
+		self::RetrievedDateField => 'SS_DateTime',
 	];
 
 }

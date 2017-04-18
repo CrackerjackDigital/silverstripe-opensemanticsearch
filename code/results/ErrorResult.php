@@ -1,5 +1,8 @@
 <?php
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Results;
+
+use OpenSemanticSearch\Interfaces\ResultInterface;
+
 /**
  * Generic response to return if no real response can be constructed due to an error happening.
  *

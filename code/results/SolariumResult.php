@@ -1,6 +1,10 @@
 <?php
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Results;
 
+use OpenSemanticSearch\Interfaces\ResultInterface;
+use OpenSemanticSearch\Interfaces\ServiceInterface;
+use OpenSemanticSearch\Models\IndexedURL;
+use OpenSemanticSearch\Services\SolariumSearcher;
 use Solarium\QueryType\Select\Result\Result;
 
 class SolariumResult extends Result implements ResultInterface {
@@ -66,7 +70,7 @@ class SolariumResult extends Result implements ResultInterface {
 							}
 						}
 					} else if ( ( $include & ServiceInterface::IncludeRemoteURLs ) === ServiceInterface::IncludeRemoteURLs ) {
-						$models->push( new Link( [ 'URI' => $path ] ) );
+						$models->push( new IndexedURL( [ 'URI' => $path ] ) );
 					}
 				}
 			}

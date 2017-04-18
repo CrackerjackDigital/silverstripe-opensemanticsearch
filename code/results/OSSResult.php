@@ -1,5 +1,8 @@
 <?php
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Results;
+
+use OpenSemanticSearch\Results\OKResult;
+
 /**
  * OSSResult wraps a result returned from a call to OpenSemanticSearch endpoints.
  *

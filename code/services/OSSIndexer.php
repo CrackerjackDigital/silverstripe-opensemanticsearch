@@ -1,8 +1,13 @@
 <?php
-namespace OpenSemanticSearch;
+
+namespace OpenSemanticSearch\Services;
 
 use Modular\Exceptions\Exception;
-use Modular\Exceptions\NotImplemented;
+use OpenSemanticSearch\Interfaces\OSSID;
+use OpenSemanticSearch\Results\ErrorResult;
+use OpenSemanticSearch\Results\OSSResult;
+use OpenSemanticSearch\Traits\http;
+use OpenSemanticSearch\Traits\json;
 use SiteTree;
 
 /**
@@ -13,7 +18,14 @@ use SiteTree;
  *
  * @package OpenSemanticSearch
  */
-class OSSIndexer extends RestfulService implements IndexInterface {
+class OSSIndexer extends IndexService {
+	use json, http {
+		http::request as httpRequest;
+	}
+	// for http::request
+	private static $context_options = [
+	];
+
 	const ServiceOSS = self::TypeOSS;
 
 	const EndpointIndexDir  = 'index-dir';
@@ -24,18 +36,18 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	/**
 	 * Makes a request and checks it's validity according to it's type. Returns a response corresponding to the type (e.g. SolrJSONResponse). Returns an
 	 *
-	 * @param string $service
-	 * @param string $endpoint
-	 * @param array  $params
-	 * @param null   $data
-	 * @param array  $tokens
+	 * @param string             $service
+	 * @param string             $endpoint
+	 * @param array|\ArrayAccess $params
+	 * @param null               $data
+	 * @param array              $tokens
 	 *
-	 * @return \OpenSemanticSearch\ResultInterface could be an ErrorResponse or e.g. SolrJSONResponse
-	 * @throws \OpenSemanticSearch\Exception
+	 * @return \OpenSemanticSearch\Interfaces\ResultInterface could be an ErrorResponse or e.g. SolrJSONResponse
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
 	public function request( $service, $endpoint, $params = [], $data = null, $tokens = [] ) {
 		// parent::request will call request in http extension
-		if ( false !== ( $decoded = parent::request( $service, $endpoint, $params, $data, $tokens ) ) ) {
+		if ( false !== ( $decoded = $this->httpRequest( $service, $endpoint, $params, $data, $tokens ) ) ) {
 			$response = OSSResult::create( $decoded );
 		} else {
 			$response = ErrorResult::create( "Request returned no valid data", print_r( $decoded, true ) );
@@ -45,10 +57,76 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	}
 
 	/**
+	 * @param \DataObject $item
+	 * @param string      $resultMessage
+	 *
+	 * @return bool
+	 * @throws \InvalidArgumentException
+	 * @throws \Modular\Exceptions\Exception
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
+	 */
+	public function add( $item, &$resultMessage = '' ) {
+		if ( $item instanceof \Folder ) {
+			$result = $this->addDirectory( $item->Link() );
+		} elseif ( $item instanceof \File ) {
+			$result = $this->addFile( $item->Link() );
+		} elseif ( $item instanceof \Page ) {
+			$result = $this->addPage( $item );
+		} else {
+			// the model should have a Link method which returns the url to index
+			$result = $this->addURL( $item->Link() );
+		}
+
+		return $result;
+	}
+
+	/**
+	 * @param \DataObject $item
+	 * @param string      $resultMessage
+	 *
+	 * @return bool
+	 * @throws \InvalidArgumentException
+	 * @throws \Modular\Exceptions\Exception
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
+	 */
+	public function remove( $item, &$resultMessage = '' ) {
+		if ( $item instanceof \Folder ) {
+			$result = $this->removePath( $item->Link() );
+		} elseif ( $item instanceof \File ) {
+			$result = $this->removePath( $item->Link() );
+		} elseif ( $item instanceof \Page ) {
+			$result = $this->removePage( $item );
+		} else {
+			// item should have a Link method which returns the URL
+			$result = $this->removeURL( $item->Link() );
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Remove then add the item.
+	 *
+	 * @param \DataObject $item
+	 * @param string      $resultMessage
+	 *
+	 * @return mixed
+	 * @throws \InvalidArgumentException
+	 * @throws \Modular\Exceptions\Exception
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
+	 */
+	public function reindex( $item, &$resultMessage = '' ) {
+		if ( $result = $this->remove( $item, $resultMessage ) ) {
+			$result = $this->add( $item, $resultMessage );
+		}
+		return $result;
+	}
+
+	/**
 	 * @param string $localPath relative to assets folder or absolute from wb root root of file to add to index.
 	 *
 	 * @return bool
-	 * @throws \OpenSemanticSearch\Exception
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 * @api
 	 */
 	public function addFile( $localPath ) {
@@ -70,7 +148,7 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	 * @param string $localPath relative to assets folder or absolute from wb root root of file to add to index.
 	 *
 	 * @return bool
-	 * @throws \OpenSemanticSearch\Exception
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 * @api
 	 */
 	public function addDirectory( $localPath ) {
@@ -94,7 +172,7 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	 * @return bool
 	 * @throws \InvalidArgumentException
 	 * @throws \Modular\Exceptions\Exception
-	 * @throws \OpenSemanticSearch\Exception
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
 	public function addPage( $pageOrID ) {
 		if ( $pageOrID && is_int( $pageOrID ) ) {
@@ -114,7 +192,7 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	 * @param $url
 	 *
 	 * @return bool
-	 * @throws \OpenSemanticSearch\Exception
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
 	public function addURL( $url ) {
 		return $this->request(
@@ -127,31 +205,12 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	}
 
 	/**
-	 * Removes a file from index.
-	 *
-	 * @param string $localPath relative to assets folder or absolute from web root of file to add to index.
-	 *
-	 * @return bool
-	 * @throws \OpenSemanticSearch\Exception
-	 * @api
-	 */
-	public function removeFile( $localPath ) {
-		return $this->request(
-			self::ServiceOSS,
-			self::EndpointRemove,
-			[
-				'uri' => $this->localToRemotePath( $localPath ),
-			]
-		)->isOK();
-	}
-
-	/**
 	 * Removes a file or directory from index.
 	 *
 	 * @param string $localPath relative to assets folder or absolute from web root of file to add to index.
 	 *
 	 * @return bool
-	 * @throws \OpenSemanticSearch\Exception
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 * @api
 	 */
 	public function removePath( $localPath ) {
@@ -170,7 +229,7 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	 * @return bool
 	 * @throws \InvalidArgumentException
 	 * @throws \Modular\Exceptions\Exception
-	 * @throws \OpenSemanticSearch\Exception
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
 	public function removePage( $pageOrID ) {
 		if ( $pageOrID && is_int( $pageOrID ) ) {
@@ -185,7 +244,7 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 			self::ServiceOSS,
 			self::EndpointRemove,
 			[
-				'uri' => $page->Link()
+				'uri' => $page->Link(),
 			]
 		)->isOK();
 	}
@@ -194,17 +253,16 @@ class OSSIndexer extends RestfulService implements IndexInterface {
 	 * @param string $url
 	 *
 	 * @return mixed
-	 * @throws \OpenSemanticSearch\Exception
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
 	public function removeURL( $url ) {
 		return $this->request(
 			self::ServiceOSS,
 			self::EndpointRemove,
 			[
-				'uri' => $url
+				'uri' => $url,
 			]
 		)->isOK();
 	}
-
 
 }

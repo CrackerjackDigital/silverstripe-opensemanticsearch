@@ -1,9 +1,11 @@
 <?php
 
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Services;
 
-use Exception;
-use SiteTree;
+use OpenSemanticSearch\Results\SolariumResult;
+use OpenSemanticSearch\Traits\array_bitfield_map;
+use OpenSemanticSearch\Traits\http;
+use OpenSemanticSearch\Traits\json;
 use Solarium\Client;
 use Solarium\Core\Client\Endpoint;
 
@@ -46,7 +48,7 @@ class SolariumSearcher extends SolrSearcher {
 		$this->endpoint = new Endpoint( $endpointInit );
 	}
 
-	public function searchByID($id, $options = [
+	public function findByID($id, $options = [
 		'resultclass' => SolariumResult::class,
 	]) {
 		$client = $this->createClient( $options);
@@ -67,7 +69,7 @@ class SolariumSearcher extends SolrSearcher {
 	 * @param array        $options
 	 * @param int          $include
 	 *
-	 * @return \OpenSemanticSearch\SolariumResult
+	 * @return \OpenSemanticSearch\Results\SolariumResult
 	 * @throws \Solarium\Exception\InvalidArgumentException
 	 * @throws \Solarium\Exception\OutOfBoundsException
 	 */

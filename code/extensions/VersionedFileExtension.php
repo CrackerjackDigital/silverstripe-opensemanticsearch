@@ -1,17 +1,15 @@
 <?php
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Extensions;
 
 /**
- * Extensions to add to Versioned Files
- *
+ * Extension to add to files which are Versioned to add, remove and gather meta data from them.
  *
  * @package OpenSemanticSearch
+ *
  */
-class VersionedFileExtension extends \DataExtension {
-	use versioned;
-	use file;
-
-	public function owner() {
-		return $this->owner;
+class VersionedFileExtension extends VersionedModelExtension {
+	public function OSSID() {
+		return $this->owner()->Filename;
 	}
+
 }

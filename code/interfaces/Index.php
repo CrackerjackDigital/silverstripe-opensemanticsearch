@@ -1,8 +1,34 @@
 <?php
-namespace OpenSemanticSearch;
+
+namespace OpenSemanticSearch\Interfaces;
 
 interface IndexInterface extends PathMappingInterface, ServiceInterface {
 	const ServiceName = 'IndexService';
+
+	/**
+	 * @param \DataObject $item
+	 * @param string      $resultMessage
+	 *
+	 * @return mixed
+	 */
+	public function add( $item, &$resultMessage = '' );
+
+	/**
+	 * @param \DataObject $item
+	 * @param string      $resultMessage
+	 *
+	 * @return mixed
+	 */
+	public function remove( $item, &$resultMessage = '' );
+
+	/**
+	 * @param \DataObject $item
+	 * @param string      $resultMessage
+	 *
+	 * @return mixed
+	 */
+	public function reindex( $item, &$resultMessage = '' );
+
 
 	/**
 	 * @param string $localPath relative to assets folder or absolute from wb root root of file to add to index.

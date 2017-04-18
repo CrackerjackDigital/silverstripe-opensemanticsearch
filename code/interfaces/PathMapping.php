@@ -1,6 +1,12 @@
 <?php
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Interfaces;
 
+/**
+ * Interface PathMappingInterface provides translation between a local (web server) and remote (indexing service) path e.g. between htdocs/assets and
+ * the mounted path where OSS indexes files at.
+ *
+ * @package OpenSemanticSearch
+ */
 interface PathMappingInterface {
 	/**
 	 * Return a local (website-oriented) path for a remote (service-oriented) path.

@@ -1,5 +1,5 @@
 <?php
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Exceptions;
 
 /**
  * Module exception to simplify handling search errors

@@ -1,5 +1,5 @@
 <?php
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Traits;
 
 /**
  * Add to a service to encode/decode json request/response.

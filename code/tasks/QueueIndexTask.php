@@ -1,11 +1,10 @@
 <?php
 
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Tasks;
 
-use Modular\Fields\File as FileField;
-use Modular\Fields\Page as PageField;
-use Modular\Fields\URL as URLField;
+use Exception;
 use Modular\Queue\QueuedTaskDispatcher;
+use OpenSemanticSearch\Models\IndexTask;
 
 /**
  * Task to add queuing of a particular file, page or url to the task queue to be picked up by qQueuedTaskHandler
@@ -13,46 +12,30 @@ use Modular\Queue\QueuedTaskDispatcher;
  * @package OpenSemanticSearch
  */
 class QueueIndexTask extends QueuedTaskDispatcher {
-	const PageIDParam = 'pageid';
-	const FileIDParam = 'fileid';
-	const URLParam    = 'uri';
+	const TaskName = IndexTask::class;
+
+	protected $description = 'Queues an IndexTask to add, remove or update the search index';
 
 	/**
 	 * Given a pageid, fileid or url as parameters add an IndexTask to ReIndex that page, file or url.
 	 *
-	 * @param null   $params
-	 *
+	 * @param array|\ArrayAccess $params
 	 * @param string $resultMessage
 	 *
 	 * @return int ID of task created
-	 * @throws \Modular\Exceptions\Exception
 	 */
-	public function execute( $params = null, &$resultMessage = '' ) {
-		$resultMessage = "Trying to queue an IndexTask";
+	public function execute( $params = [], &$resultMessage = '' ) {
+		$resultMessage = "Queuing IndexTask";
 		$this->trackable_start( __METHOD__, $resultMessage );
 
-		if ( isset( $params[ self::PageIDParam ] ) ) {
-			$this->dispatch( [
-				PageField::field_name()   => $params[ self::PageIDParam ],
-				IndexAction::field_name() => IndexAction::ReIndex,
-			] );
-		} elseif ( isset( $params[ self::FileIDParam ] ) ) {
-			$task = $this->dispatch( [
-				FileField::field_name()   => $params[ self::FileIDParam ],
-				IndexAction::field_name() => IndexAction::ReIndex,
-			] );
+		$this->debugger()->set_error_exception();
+		try {
+			$task          = $this->dispatch( $params, $resultMessage );
+			$resultMessage = "dispatched task '$task->Title'";
 
-		} elseif ( isset( $params[ self::URLParam ] ) ) {
-			$task = $this->dispatch( [
-				URLField::field_name()    => $params[ self::URLParam ],
-				IndexAction::field_name() => IndexAction::ReIndex,
-			] );
-		} else {
-			$resultMessage = "No valid parameters passed";
-
-			return $this->debug_fail( new Exception() );
+		} catch ( Exception $e ) {
+			$resultMessage = $e->getMessage();
 		}
-		$resultMessage = "dispatched task '$task->Title'";
 		$this->trackable_end( $resultMessage );
 
 	}

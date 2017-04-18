@@ -1,5 +1,5 @@
 <?php
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Traits;
 /**
  * array_access adds ArrayAccess syntax to a class.
  *

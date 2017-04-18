@@ -3,63 +3,64 @@ Name: open-semantic-search-config
 ---
 Injector:
   SearchService:
-    class: 'OpenSemanticSearch\SolariumSearcher'
+    class: 'OpenSemanticSearch\Services\SolariumSearcher'
   IndexService:
-    class: 'OpenSemanticSearch\OSSIndexer'
+    class: 'OpenSemanticSearch\Services\OSSIndexer'
+  MetaDataService:
+    class: 'OpenSemanticSearch\Services\MetaDataService'
+    properties:
+      searcher: %$SearchService
   IndexTask:
-    class: 'OpenSemanticSearch\IndexTask'
-  FileInfoTask:
-    class: 'OpenSemanticSearch\FileInfoTask'
-OpenSemanticSearch\Query:
+    class: 'OpenSemanticSearch\Models\IndexTask'
+  MetaDataTask:
+    class: 'OpenSemanticSearch\Models\MetaDataTask'
+File:
   extensions:
-    - 'OpenSemanticSearch\MetaDataExtension'
-Link:
+    - 'OpenSemanticSearch\Extensions\MetaDataExtension'
+#    - 'OpenSemanticSearch\Extensions\FileExtension'              # add in site config for 'normal' files
+#    - 'OpenSemanticSearch\Extensions\VersionedModelExtension'     # add in site config for 'versioned' files
+Page:
+  extensions:
+    - 'OpenSemanticSearch\Extensions\MetaDataExtension'
+#    - 'OpenSemanticSearch\Extensions\PageExtension'              # add in app config to Page or subclasses to make searchable
+OpenSemantionSearch\Models\IndexedURL:
   extensions:
     - 'Modular\Fields\Title'
     - 'Modular\Fields\Description'
-    - 'Modular\Fields\URL'
-    - 'OpenSemanticSearch\URLExtension'
-File:
+OpenSemanticSearch\Models\IndexTask:
+  dependencies:
+    service: %$IndexService
   extensions:
-    - 'OpenSemanticSearch\MetaDataExtension'
-#   - 'OpenSemanticSearch\FileExtension'              # add in site config for 'normal' files
-#   - 'OpenSemanticSearch\VersionedFileExtension'     # add in site config for 'versioned' files
-Page:
+    - 'OpenSemanticSearch\Fields\IndexAction'
+    - 'OpenSemanticSearch\Fields\IndexedItem'
+OpenSemanticSearch\Models\MetaDataTask:
+  dependencies:
+    service: %$MetaDataService
   extensions:
-    - 'OpenSemanticSearch\MetaDataExtension'
-    - 'OpenSemanticSearch\PageExtension'
-OpenSemanticSearch\IndexTask:
-  extensions:
-    - 'Modular\Fields\URL'
-    - 'Modular\Fields\File'
-    - 'Modular\Fields\Page'
-    - 'OpenSemanticSearch\IndexAction'
-OpenSemanticSearch\FileInfoTask:
-  extensions:
-    - 'Modular\Fields\File'
+    - 'OpenSemanticSearch\Fields\IndexedItem'
 
 # add the following in app config for files
 # File:
 #  extensions:
-#    - OpenSemanticSearch\FileExtension
+#    - OpenSemanticSearch\Extensions\FileExtension
 #
 # add the following in app config for Versioned files
 # File:
 #  extensions:
-#    - OpenSemanticSearch\VersionedFileExtension
+#    - OpenSemanticSearch\Extensions\VersionedFileExtension
 #
 # add the following in app config for each Page class you want to make searchable (or Page for all pages)
 # Page:
 #  extensions:
-#    - OpenSemanticSearch\PageExtension
+#    - OpenSemanticSearch\Extensions\PageExtension
 #
-OpenSemanticSearch\Service:
+OpenSemanticSearch\Services\Service:
   path_map:
     dev:
       '/assets/': '/mount/files/assets/'
   core:
     dev: 'core1'
-OpenSemanticSearch\OSSIndexer:
+OpenSemanticSearch\Services\OSSIndexer:
   context_options:
     dev:
       oss:
@@ -70,7 +71,7 @@ OpenSemanticSearch\OSSIndexer:
     dev:
       oss:
         '*': 'http://localhost:9010/search-apps/api/{endpoint}'
-OpenSemanticSearch\SolrSearcher:
+OpenSemanticSearch\Services\SolrSearcher:
   endpoints:
     dev:
       solr:

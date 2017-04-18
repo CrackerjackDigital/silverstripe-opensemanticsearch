@@ -1,8 +1,9 @@
 <?php
 
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Controllers;
 
 use Modular\Exceptions\Exception;
+use OpenSemanticSearch\Interfaces\SearchInterface;
 
 class OSSController extends \ContentController {
 	private static $allowed_actions = [

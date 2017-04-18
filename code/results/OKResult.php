@@ -1,5 +1,7 @@
 <?php
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Results;
+
+use OpenSemanticSearch\Interfaces\ResultInterface;
 
 abstract class OKResult extends \Object implements ResultInterface {
 	protected $data;

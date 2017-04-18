@@ -1,7 +1,10 @@
 <?php
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Services;
 
 use ArrayList;
+use OpenSemanticSearch\Exceptions\SearchException;
+use OpenSemanticSearch\Interfaces\SearchInterface;
+use OpenSemanticSearch\Services\Service;
 use SiteTree;
 
 abstract class SolrSearcher extends Service implements SearchInterface {
@@ -17,8 +20,8 @@ abstract class SolrSearcher extends Service implements SearchInterface {
 	 *
 	 * @return mixed
 	 */
-	public function findPath( $localPath ) {
-		return $this->searchByID( self::TypeFile . $this->localToRemotePath( $localPath ) );
+	public function findFile( $localPath ) {
+		return $this->findByID( self::TypeFile . $this->localToRemotePath( $localPath ) );
 	}
 
 	public function findPage( $pageOrID ) {

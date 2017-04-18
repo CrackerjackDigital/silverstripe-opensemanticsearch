@@ -1,5 +1,5 @@
 <?php
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Interfaces;
 
 interface SearchInterface extends PathMappingInterface, ServiceInterface {
 	const ServiceName       = 'SearchService';
@@ -7,19 +7,38 @@ interface SearchInterface extends PathMappingInterface, ServiceInterface {
 	const FilterContentType = 'type';
 
 	/**
-	 * @param string $localPath
+	 * Return a single model by it's OSS ID
+	 * @param mixed|\OpenSemanticSearch\Interfaces\OSSID|\DataObject $ossID generally for Open Semantic Search this is the path to the File or URL for Page, or
+	 *                                                           if a model then whatever is returned from the models OSSID() method.
 	 *
-	 * @return ResultInterface
+	 * @return mixed
 	 */
-	public function findPath( $localPath );
+	public function findByID($ossID);
 
 	/**
+	 * Returns a single match given a path, or null if not match found
+	 *
+	 * @param string $localPath
+	 *
+	 * @return \File
+	 */
+	public function findFile( $localPath );
+
+	/**
+	 * Return a single Page if found
+	 *
 	 * @param Page|int
 	 *
-	 * @return ResultInterface
+	 * @return \Page
 	 */
 	public function findPage( $pageOrID );
 
+	/**
+	 * Return a single match by URL
+	 * @param $url
+	 *
+	 * @return mixed
+	 */
 	public function findURL( $url );
 
 	/**
@@ -32,7 +51,7 @@ interface SearchInterface extends PathMappingInterface, ServiceInterface {
 	 * @param array        $options  generic representation of service specific options
 	 * @param int          $include  what gets included in results
 	 *
-	 * @return \OpenSemanticSearch\ResultInterface
+	 * @return \OpenSemanticSearch\Interfaces\ResultInterface
 	 */
 	public function search(
 		$fullText,      # 'fred' or [ 'fred', 'dagg' ] or [ 'title' => 'fred', 'content' => 'dagg' ]
@@ -58,6 +77,4 @@ interface SearchInterface extends PathMappingInterface, ServiceInterface {
 		],
 		$include = self::IncludeAll
 	);
-
-	public function searchByID($id);
 }

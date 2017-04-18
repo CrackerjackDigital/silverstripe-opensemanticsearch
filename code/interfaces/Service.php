@@ -1,5 +1,5 @@
 <?php
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Interfaces;
 
 interface ServiceInterface extends \Modular\Interfaces\Service {
 	const IncludeFiles      = 1;

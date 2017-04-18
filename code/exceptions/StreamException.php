@@ -1,8 +1,6 @@
 <?php
 
-namespace OpenSemanticSearch;
-
-use Exception;
+namespace OpenSemanticSearch\Exceptions;
 
 class StreamException extends Exception {
 	/**

@@ -1,6 +1,8 @@
 <?php
 
-namespace OpenSemanticSearch;
+namespace OpenSemanticSearch\Traits;
+
+use OpenSemanticSearch\Exceptions\Exception;
 
 /**
  * http simple http request handling using php file methods and stream contexts
@@ -13,12 +15,12 @@ trait http {
 	 *
 	 * @param string $service
 	 * @param string $endpoint
-	 * @param array  $params will be added to uri as query string
+	 * @param array|\ArrayAccess $params will be added to uri as query string
 	 * @param array  $data   to send as the request payload (will become a POST if passed)
 	 * @param array  $tokens additional tokens to substitute into the uri
 	 *
 	 * @return mixed
-	 * @throws \OpenSemanticSearch\Exception
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
 	public function request( $service, $endpoint, $params = [], $data = null, $tokens = [] ) {
 		if ( ! $uri = $this->uri( $service, $endpoint, $params, $tokens ) ) {
@@ -101,7 +103,7 @@ trait http {
 	 *
 	 * @param string $service  generally a ServiceABC constant
 	 * @param string $endpoint generally an EndpointABC constant
-	 * @param array  $params   encoded as query string, values are expected already to be url encoded correctly
+	 * @param array|\ArrayAccess $params   encoded as query string, values are expected already to be url encoded correctly
 	 * @param array  $tokens   additional to replace in uri
 	 *
 	 * @return String
