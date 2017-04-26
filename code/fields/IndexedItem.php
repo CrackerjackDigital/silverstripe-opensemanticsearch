@@ -1,14 +1,9 @@
 <?php
 namespace OpenSemanticSearch\Fields;
 
-use Modular\Fields\RefOneAnyField;
-use ValidationResult;
+use Modular\Fields\ModelRef;
 
-class IndexedItem extends RefOneAnyField {
+class IndexedItem extends ModelRef {
 	const Name = 'IndexedItem';
-
-	public function classFieldName() {
-		return $this()->{static::relationship_name()}()->classValue();
-	}
 
 }

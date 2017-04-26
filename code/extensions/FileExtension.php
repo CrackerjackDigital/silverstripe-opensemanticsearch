@@ -9,7 +9,11 @@ namespace OpenSemanticSearch\Extensions;
  */
 class FileExtension extends ModelExtension {
 	public function OSSID() {
-		return $this->owner()->Filename;
+		return $this->owner()->Link();
+	}
+
+	public function onBeforeWrite() {
+		parent::onBeforeWrite();
 	}
 
 }

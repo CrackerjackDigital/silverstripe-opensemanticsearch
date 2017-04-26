@@ -7,7 +7,7 @@ use Modular\Queue\QueuedTaskDispatcher;
 use OpenSemanticSearch\Models\IndexTask;
 
 /**
- * Task to add queuing of a particular file, page or url to the task queue to be picked up by qQueuedTaskHandler
+ * Queues an IndexTask for execution later e.g. by QueuedTaskRunner.
  *
  * @package OpenSemanticSearch
  */
@@ -28,16 +28,15 @@ class QueueIndexTask extends QueuedTaskDispatcher {
 		$resultMessage = "Queuing IndexTask";
 		$this->trackable_start( __METHOD__, $resultMessage );
 
-		$this->debugger()->set_error_exception();
+		$this->debugger()->set_error_exception($resultMessage);
 		try {
 			$task          = $this->dispatch( $params, $resultMessage );
 			$resultMessage = "dispatched task '$task->Title'";
 
 		} catch ( Exception $e ) {
-			$resultMessage = $e->getMessage();
+
 		}
 		$this->trackable_end( $resultMessage );
-
 	}
 
 }

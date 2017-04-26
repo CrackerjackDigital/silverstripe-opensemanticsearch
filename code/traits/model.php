@@ -7,7 +7,8 @@ use OpenSemanticSearch\Fields\IndexAction;
 use OpenSemanticSearch\Fields\IndexedItem;
 
 /**
- * file trait added to files (not versioned files) to add/save/reindex/remove them from the index
+ * Add onAfterWrite and onAfterDelete handlers to add and remove extended model from Index. Also adds a
+ * MetaDataTask onAfterWrite.
  *
  * @package OpenSemanticSearch
  */
@@ -22,11 +23,21 @@ trait model {
 
 	abstract function owner();
 
+	public function onBeforeWrite() {
+		$this->remove($this->owner());
+	}
+
+	/**
+	 * Queue an IndexTask and a MetaData task for the model.
+	 */
 	public function onAfterWrite() {
 		$this->add($this->owner());
 		$this->metadata($this->owner());
 	}
 
+	/**
+	 * Remove the file from the index.
+	 */
 	public function onAfterDelete() {
 		$this->remove($this->owner());
 	}

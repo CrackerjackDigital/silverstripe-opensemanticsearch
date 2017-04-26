@@ -2,7 +2,10 @@
 
 namespace OpenSemanticSearch\Traits;
 
+use Modular\Debugger;
+use Modular\Interfaces\HTTP as HTTPInterface;
 use OpenSemanticSearch\Exceptions\Exception;
+use OpenSemanticSearch\Results\ErrorResult;
 
 /**
  * http simple http request handling using php file methods and stream contexts
@@ -11,13 +14,24 @@ use OpenSemanticSearch\Exceptions\Exception;
  */
 trait http {
 	/**
+	 * Check response code is in the '2xx' range.
+	 *
+	 * @param int|string $code
+	 *
+	 * @return bool true if in range, false otherwise
+	 */
+	public function responseCodeIsOK( $code ) {
+		return fnmatch( '2*', $code );
+	}
+
+	/**
 	 * Return a decoded response a request to the service endpoint passing params on url and data in request body if provided.
 	 *
-	 * @param string $service
-	 * @param string $endpoint
+	 * @param string             $service
+	 * @param string             $endpoint
 	 * @param array|\ArrayAccess $params will be added to uri as query string
-	 * @param array  $data   to send as the request payload (will become a POST if passed)
-	 * @param array  $tokens additional tokens to substitute into the uri
+	 * @param array              $data   to send as the request payload (will become a POST if passed)
+	 * @param array              $tokens additional tokens to substitute into the uri
 	 *
 	 * @return mixed
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
@@ -26,19 +40,27 @@ trait http {
 		if ( ! $uri = $this->uri( $service, $endpoint, $params, $tokens ) ) {
 			return false;
 		}
-		$payload = $this->encodeRequest( $service, $endpoint, $data );
-
-		$context = $this->context( $service, $payload );
+		// make a stream context to use
+		$context = $this->context( $service, $endpoint, $data, [] );
 
 		$message = '';
+		$code    = null;
 
-		$previousErrorHandler = set_error_handler( function ( $c, $m ) use ( &$message ) {
-			$message = $m;
-			return false;
-		} );
+//		$previousErrorHandler = Debugger::set_error_exception( $message, $code );
 		try {
-			// we want to try and handle the error gracefully so suppress messages on the call to file_get_contents
-			if ( false === ( $body = @file_get_contents( $uri, null, $context ) ) ) {
+			$responseBody = false;
+			$e            = null;
+			try {
+				$responseBody = @file_get_contents( $uri, null, $context );
+
+				$result = $this->decodeResponse( $service, $endpoint, $responseBody, $this->parseHTTPResponseHeaders( $http_response_header ) );
+
+			} catch ( \Exception $e ) {
+				// message and code will have been set by exception error handler
+				xdebug_break();
+			}
+			if ( false === $responseBody ) {
+				// handle no response at all, check if exception error handler got a message first
 				if ( ! $message ) {
 
 					if ( isset( $http_response_header[0] ) ) {
@@ -46,7 +68,7 @@ trait http {
 						$message = $http_response_header[0];
 
 					}
-					if (!$message) {
+					if ( ! $message ) {
 						$oldContext = stream_context_get_options( stream_context_get_default() );
 						stream_context_set_default( stream_context_get_options( $context ) );
 
@@ -61,17 +83,87 @@ trait http {
 					}
 
 				}
-				throw new Exception( $message );
+				throw new Exception( $message, $code, $e );
 			}
-			set_error_handler( $previousErrorHandler );
+
+//			set_error_handler( $previousErrorHandler );
 
 		} catch ( \Exception $e ) {
-			set_error_handler( $previousErrorHandler );
-
-			throw new Exception( $e->getMessage(), $e->getCode() );
+//			set_error_handler( $previousErrorHandler );
+			$result = new ErrorResult( $e->getMessage() );
 		}
 
-		return $this->decodeResponse( $service, $endpoint, $body );
+		return $result;
+	}
+
+	/**
+	 *
+	 *
+	 * @param string $url      to rewrite
+	 *
+	 * @param array  $rewrite  set these values on the output
+	 * @param array  $defaults set these values on the output if missing
+	 *
+	 * @return string
+	 */
+	public function rebuildURL(
+		$url,
+		$rewrite = [],
+		$defaults = [
+			HTTPInterface::PartScheme   => 'https',
+			HTTPInterface::PartUser     => '',
+			HTTPInterface::PartPassword => '',
+			HTTPInterface::PartHost     => '',
+			HTTPInterface::PartPort     => '80',
+			HTTPInterface::PartPath     => '',
+			HTTPInterface::PartQuery    => '',
+			HTTPInterface::PartFragment => '',
+		]
+	) {
+
+		static $seperators = [
+			HTTPInterface::PartScheme   => '://',
+			HTTPInterface::PartUser     => ':',
+			HTTPInterface::PartPassword => '@',
+			HTTPInterface::PartHost     => ':',
+			HTTPInterface::PartPort     => '/',
+			HTTPInterface::PartPath     => '?',
+			HTTPInterface::PartQuery    => '#',
+			HTTPInterface::PartFragment => '',
+		];
+
+		$parsed = array_merge(
+			parse_url( $url ),
+			$rewrite
+		);
+
+		$out  = '';
+		$last = '';
+
+		foreach ( $seperators as $key => $seperator ) {
+
+			if ( array_key_exists( $key, $parsed ) ) {
+				// value for this key was parsed out, add it back and postfix
+				$out  .= $parsed[ $key ] . $seperator;
+				$last = $parsed[ $key ];
+			} elseif ( ! empty( $defaults[ $key ] ) && ! empty( $last ) ) {
+				// there is a default use that and append prefix
+				$out  .= $defaults[ $key ] . $seperator;
+				$last = '';
+			} elseif ( $last ) {
+//				$out .= $defaults[$lastKey];
+				$last = '';
+			} else {
+				$last = '';
+			}
+			$lastKey = $key;
+		}
+		// trim off any trailing postfixes
+		foreach ( $seperators as $seperator ) {
+			$out = rtrim( $out, $seperator );
+		}
+
+		return $out;
 	}
 
 	/**
@@ -90,7 +182,7 @@ trait http {
 			} else {
 				$head[] = $v;
 				if ( preg_match( "#HTTP/[0-9\.]+\s+([0-9]+)#", $v, $out ) ) {
-					$head['reponse_code'] = intval( $out[1] );
+					$head['ResponseCode'] = intval( $out[1] );
 				}
 			}
 		}
@@ -101,18 +193,17 @@ trait http {
 	/**
 	 * Build a uri replacing tokens with key => value pairs from data
 	 *
-	 * @param string $service  generally a ServiceABC constant
-	 * @param string $endpoint generally an EndpointABC constant
+	 * @param string             $service  generally a ServiceABC constant
+	 * @param string             $endpoint generally an EndpointABC constant
 	 * @param array|\ArrayAccess $params   encoded as query string, values are expected already to be url encoded correctly
-	 * @param array  $tokens   additional to replace in uri
+	 * @param array              $tokens   additional to replace in uri
 	 *
 	 * @return String
 	 */
 	protected function uri( $service, $endpoint, $params = [], $tokens = [] ) {
 		$uri = $this->option( $this->option( $this->option( 'endpoints' ), $service ), $endpoint );
 
-		// replace path tokens here
-
+		// add default tokens
 		$tokens = array_merge(
 			[
 				'endpoint' => $endpoint,
@@ -120,20 +211,34 @@ trait http {
 			],
 			$tokens
 		);
-		// replace tokens in uri
+		$uri    = $this->replaceTokens( $uri, $tokens );
+		$uri    = $this->appendQueryParams( $uri, $params );
+
+		return $uri;
+	}
+
+	/**
+	 * Replace tokens in uri with urlencoded values
+	 *
+	 * @param string $uri
+	 * @param array  $tokens
+	 *
+	 * @return mixed
+	 */
+	protected function replaceTokens( $uri, $tokens = [] ) {
+		// replace tokens in uri with urlencoded values
 		foreach ( $tokens as $token => $value ) {
 			$uri = str_replace( $this->token( $token ), urlencode( $value ), $uri );
 		}
-		$uri = $this->appendQueryParams( $uri, $params );
 
-		return "$uri";
+		return $uri;
 	}
 
 	/**
 	 * Append params as a query string to the uri.
 	 *
-	 * @param $toURI
-	 * @param $params
+	 * @param string $toURI
+	 * @param array  $params
 	 *
 	 * @return string
 	 */
@@ -150,7 +255,7 @@ trait http {
 	}
 
 	/**
-	 * Build query string from params, values are expected to already be correctly urlencoded.
+	 * Build query string from params, values will be urlencoded.
 	 *
 	 * @param $params
 	 *
@@ -160,7 +265,7 @@ trait http {
 		// build query string from params, values are expected already to be url encoded
 		$qs = '';
 		foreach ( $params ?: [] as $name => $value ) {
-			$qs .= "&$name=$value";
+			$qs .= "&$name=" . urlencode( $value );
 		}
 
 		return substr( $qs, 1 );
@@ -171,38 +276,26 @@ trait http {
 	 * be sent as the request body along with the accept-type for the service/endpoint.
 	 *
 	 * @param string $service        e.g. self.ServiceSOLR
-	 * @param string $payload        will be sent as the request body
 	 * @param string $endpoint       e.g. self.EndpointQuery
+	 * @param null   $data           to encode into context, e.g. post body
 	 * @param array  $contextOptions (passed to context create)
 	 *
 	 * @return resource
 	 */
-	protected function context( $service, $payload = null, $endpoint = '', $contextOptions = [] ) {
+	protected
+	function context(
+		$service, $endpoint = '', $data = null, $contextOptions = []
+	) {
 		$options = array_merge_recursive(
 			$this->option( 'context_options' )[ $service ] ?: [],
 			$contextOptions ?: []
 		);
-		if ( $payload ) {
-			$options['http']['content'] = $payload;
+		if ( $data ) {
+			$options['http']['content'] = $this->encodeRequest( $endpoint, $endpoint, $data );
 		}
 		$context = stream_context_create( $options );
 
 		return $context;
-	}
-
-	/**
-	 * Given a raw response return something sensible given the encoding defined for the environment.
-	 *
-	 * @param string $service  responding
-	 * @param string $endpoint responding
-	 * @param string $responseBody
-	 *
-	 * @return mixed e.g. an array from json_decode
-	 */
-	protected function decodeResponse( $service, $endpoint = '', $responseBody ) {
-		$method = $this->option( $this->option( 'encoding' ), $service ) . 'Decode';
-
-		return $this->decode( $responseBody );
 	}
 
 	/**
@@ -215,8 +308,6 @@ trait http {
 	 * @return string
 	 */
 	protected function encodeRequest( $service, $endpoint = '', $requestData ) {
-		$method = $this->option( $this->option( 'encoding' ), $service ) . 'Encode';
-
 		return $this->encode( $requestData );
 	}
 

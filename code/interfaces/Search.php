@@ -8,12 +8,13 @@ interface SearchInterface extends PathMappingInterface, ServiceInterface {
 
 	/**
 	 * Return a single model by it's OSS ID
-	 * @param mixed|\OpenSemanticSearch\Interfaces\OSSID|\DataObject $ossID generally for Open Semantic Search this is the path to the File or URL for Page, or
-	 *                                                           if a model then whatever is returned from the models OSSID() method.
 	 *
-	 * @return mixed
+	 * @param $model
+	 *
+	 * @return \DataObject
+	 *
 	 */
-	public function findByID($ossID);
+	public function find($model);
 
 	/**
 	 * Returns a single match given a path, or null if not match found

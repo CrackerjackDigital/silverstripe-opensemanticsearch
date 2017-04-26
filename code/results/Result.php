@@ -3,7 +3,7 @@ namespace OpenSemanticSearch\Results;
 
 use OpenSemanticSearch\Interfaces\ResultInterface;
 
-abstract class OKResult extends \Object implements ResultInterface {
+abstract class Result extends \Object implements ResultInterface {
 	protected $data;
 
 	protected $message;
@@ -14,21 +14,54 @@ abstract class OKResult extends \Object implements ResultInterface {
 
 	protected $limit = null;
 
-	public function __construct( $data, $message = null, $code = null ) {
-		$this->data = $data;
-		$this->message = $message;
+	/**
+	 * Result constructor.
+	 *
+	 * @param mixed $code
+	 * @param mixed $data raw data, e.g. a response body
+	 * @param mixed $message
+	 */
+	public function __construct( $code = null, $data = null, $message = null ) {
 		$this->code = $code;
+		$this->message = $message;
+		$this->data($data);
+
 		parent::__construct();
 	}
 
-	public function data() {
-		return $this->data;
+	/**
+	 * Return iterable array of items from the data. If one item should still
+	 * be iterable with single item.
+	 *
+	 * @return \Traversable|array
+	 */
+	abstract public function items();
+
+	/**
+	 * @return bool
+	 */
+	public function hasItems() {
+		return $this->count() > 0;
 	}
 
 	/**
-	 * @return mixed
+	 * @return int
 	 */
-	public function response() {
+	public function count() {
+		return count( $this->items() );
+	}
+
+	/**
+	 * Return the raw data.
+	 *
+	 * @param mixed $data
+	 *
+	 * @return null
+	 */
+	public function data($data = null) {
+		if (func_num_args()) {
+			$this->data = $data;
+		}
 		return $this->data;
 	}
 
@@ -66,13 +99,6 @@ abstract class OKResult extends \Object implements ResultInterface {
 	 */
 	public function resultMessage() {
 		return $this->message;
-	}
-
-	/**
-	 * @return \Traversable|array
-	 */
-	public function items() {
-		return $this->data();
 	}
 
 	/**

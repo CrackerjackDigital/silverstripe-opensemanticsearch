@@ -17,6 +17,7 @@ Injector:
 File:
   extensions:
     - 'OpenSemanticSearch\Extensions\MetaDataExtension'
+    - 'Modular\Extensions\Model\TrackedValue("Filename")'
 #    - 'OpenSemanticSearch\Extensions\FileExtension'              # add in site config for 'normal' files
 #    - 'OpenSemanticSearch\Extensions\VersionedModelExtension'     # add in site config for 'versioned' files
 Page:
@@ -27,6 +28,7 @@ OpenSemantionSearch\Models\IndexedURL:
   extensions:
     - 'Modular\Fields\Title'
     - 'Modular\Fields\Description'
+    - 'Modular\Fields\URL'
 OpenSemanticSearch\Models\IndexTask:
   dependencies:
     service: %$IndexService
@@ -66,7 +68,7 @@ OpenSemanticSearch\Services\OSSIndexer:
       oss:
         http:
           method: 'GET'
-          timeout: 20
+          timeout: 10    # 20 seconds in dev mode for testing
   endpoints:
     dev:
       oss:

@@ -1,4 +1,5 @@
 <?php
+
 namespace OpenSemanticSearch\Results;
 
 use OpenSemanticSearch\Interfaces\ResultInterface;
@@ -8,7 +9,7 @@ use OpenSemanticSearch\Interfaces\ResultInterface;
  *
  * @package OpenSemanticSearch
  */
-class ErrorResult extends \Object implements ResultInterface {
+class ErrorResult extends Result implements ResultInterface {
 
 	// e.g. 'Forbidden' or 'Not Found'
 	protected $message;
@@ -19,13 +20,13 @@ class ErrorResult extends \Object implements ResultInterface {
 	// probably not used in the case of errors
 	protected $limit;
 
-	public function __construct($message, $code = null, $data = null) {
-		$this->data = $data;
-		parent::__construct();
+	public function __construct( $code = null, $data = null, $message = 'Failed' ) {
+		parent::__construct( $code, $data, $message );
 	}
 
 	/**
 	 * Return an empty ArrayList for an error.
+	 *
 	 * @return \ArrayList
 	 */
 	public function models() {
@@ -47,7 +48,7 @@ class ErrorResult extends \Object implements ResultInterface {
 	 * @return mixed
 	 */
 	public function isOK() {
-		return !$this->isError();
+		return ! $this->isError();
 	}
 
 	/**
@@ -70,6 +71,7 @@ class ErrorResult extends \Object implements ResultInterface {
 
 	/**
 	 * Return the result code set in ctor.
+	 *
 	 * @return mixed
 	 */
 	public function resultCode() {

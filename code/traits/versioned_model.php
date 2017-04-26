@@ -14,8 +14,12 @@ trait versioned_model {
 	/**
 	 * @return \Page
 	 */
-	public function owner() {
+	public function Publish() {
 		return $this->owner;
+	}
+
+	public function onBeforePublish() {
+		$this->remove( $this->owner() );
 	}
 
 	public function onAfterPublish() {

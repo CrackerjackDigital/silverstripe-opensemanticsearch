@@ -72,7 +72,7 @@ interface IndexInterface extends PathMappingInterface, ServiceInterface {
 	 * @return bool
 	 * @api
 	 */
-	public function removePath( $localPath );
+	public function removeFilePath( $localPath );
 
 	/**
 	 * @param \Page|int $pageOrID

@@ -12,7 +12,7 @@ use OpenSemanticSearch\Fields\IndexAction;
 use OpenSemanticSearch\Models\MetaDataTask;
 
 /**
- * Task to add queuing of a particular file, page or url to the task queue to be picked up by QueuedTaskHandler
+ * Queues a MetaDataTask for execution later e.g. by QueuedTaskRunner.
  *
  * @package OpenSemanticSearch
  */
@@ -34,13 +34,12 @@ class QueueMetaDataTask extends QueuedTaskDispatcher {
 		$resultMessage = "Queuing MetaData task";
 		$this->trackable_start( __METHOD__, $resultMessage );
 
-		$this->debugger()->set_error_exception();
+		$this->debugger()->set_error_exception($resultMessage);
 		try {
 			$task          = $this->dispatch( $params, $resultMessage );
 			$resultMessage = "Dispatched MetaData task '$task->Title'";
 
 		} catch ( Exception $e ) {
-			$resultMessage = $e->getMessage();
 		}
 		$this->trackable_end( $resultMessage );
 

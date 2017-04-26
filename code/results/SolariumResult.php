@@ -1,19 +1,29 @@
 <?php
+
 namespace OpenSemanticSearch\Results;
 
 use OpenSemanticSearch\Interfaces\ResultInterface;
 use OpenSemanticSearch\Interfaces\ServiceInterface;
 use OpenSemanticSearch\Models\IndexedURL;
 use OpenSemanticSearch\Services\SolariumSearcher;
-use Solarium\QueryType\Select\Result\Result;
+use OpenSemanticSearch\Traits\json;
+use Modular\Interfaces\HTTP as HTTP;
 
 class SolariumResult extends Result implements ResultInterface {
+	use json;
+
+	public function __construct( $code = null, $data = null, $message = null ) {
+		parent::__construct( $code, $data, $message );
+	}
 
 	/**
-	 * @return array
+	 * @return \Traversable|array
 	 */
 	public function items() {
-		return $this->getDocuments();
+		$items   = [];
+		$decoded = $this->decode( $this->data() );
+
+		return $items;
 	}
 
 	/**
@@ -22,6 +32,7 @@ class SolariumResult extends Result implements ResultInterface {
 	 * @param int $include bitfield of what models to include in results
 	 *
 	 * @return \ArrayList
+	 * @throws \InvalidArgumentException
 	 */
 	public function models( $include = ServiceInterface::IncludeAll ) {
 		$models = new \ArrayList();
@@ -37,7 +48,7 @@ class SolariumResult extends Result implements ResultInterface {
 				$id     = $item['id'];
 				$scheme = parse_url( $id, PHP_URL_SCHEME );
 
-				if ( $scheme == 'file' ) {
+				if ( $scheme == HTTP::SchemeFile ) {
 					if ( ( $include & ServiceInterface::IncludeFiles ) === ServiceInterface::IncludeFiles ) {
 						if ( $filePathName = $service->remoteToLocalPath( $id ) ) {
 							$files[] = $filePathName;
@@ -52,25 +63,29 @@ class SolariumResult extends Result implements ResultInterface {
 				$id     = $item['id'];
 				$scheme = parse_url( $id, PHP_URL_SCHEME );
 
-				if ( $scheme == 'file' ) {
+				if ( HTTP::PartScheme == HTTP::SchemeFile ) {
 					if ( ( $include & ServiceInterface::IncludeFiles ) === ServiceInterface::IncludeFiles ) {
 						if ( $filePathName = $service->remoteToLocalPath( $id ) ) {
-							if ( $file = $files->find( 'Filename', $filePathName ) ) {
-								$models->push( $file );
+							if ( !$file = $files->find( 'Filename', $filePathName ) ) {
+								$file = new \File();
 							}
+							$file->updateOSSMetaData($item);
+							$models->push( $file );
 						}
 					}
-				} else if ( $scheme == 'http' || $scheme == 'https' ) {
+				} else if ( in_array( $scheme, [ HTTP::SchemeHTTP, HTTP::SchemeHTTPS ] ) ) {
 					$path = parse_url( $id, PHP_URL_PATH );
 
 					if ( \Director::is_site_url( $id ) ) {
 						if ( ( $include & ServiceInterface::IncludeLocalPages ) === ServiceInterface::IncludeLocalPages ) {
-							if ( $page = \SiteTree::get_by_link( $path ) ) {
-								$models->push( $page );
+							if ( !$page = \SiteTree::get_by_link( $path ) ) {
+								$page = new \Page();
+								$page->updateOSSMetaData($item);
 							}
+							$models->push( $page );
 						}
 					} else if ( ( $include & ServiceInterface::IncludeRemoteURLs ) === ServiceInterface::IncludeRemoteURLs ) {
-						$models->push( new IndexedURL( [ 'URI' => $path ] ) );
+						$models->push( new IndexedURL( [ IndexedURL::URLField => $path ] ) );
 					}
 				}
 			}
@@ -84,8 +99,8 @@ class SolariumResult extends Result implements ResultInterface {
 	 *
 	 * @return string decoded json
 	 */
-	public function data() {
-		return json_decode( $this->getResponse()->getBody() );
+	public function data( $data = null ) {
+		return $this->data;
 	}
 
 	/**
@@ -136,4 +151,13 @@ class SolariumResult extends Result implements ResultInterface {
 		return $this->getResponse()->getStatusCode();
 	}
 
+	/**
+	 * Return the count of items which can be returned, or 0 if none. Depending on implementation this
+	 * could be the total count, or the count available from start, or from start+limit.
+	 *
+	 * @return int
+	 */
+	public function count() {
+		// TODO: Implement count() method.
+	}
 }

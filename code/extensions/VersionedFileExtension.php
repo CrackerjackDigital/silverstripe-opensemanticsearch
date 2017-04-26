@@ -9,7 +9,7 @@ namespace OpenSemanticSearch\Extensions;
  */
 class VersionedFileExtension extends VersionedModelExtension {
 	public function OSSID() {
-		return $this->owner()->Filename;
+		return $this->owner()->Link();
 	}
 
 }

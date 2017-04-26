@@ -18,7 +18,7 @@ interface ResultInterface {
 	public function items();
 
 	/**
-	 * Return the response data in a decoded format, e.g if the response is in json, then a json_decoded array
+	 * Return the raw response data, not decoded
 	 *
 	 * @return array
 	 */

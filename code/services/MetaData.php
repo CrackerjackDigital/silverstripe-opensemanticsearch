@@ -6,8 +6,9 @@ use OpenSemanticSearch\Extensions\MetaDataExtension;
 use OpenSemanticSearch\Interfaces\MetaDataInterface;
 use OpenSemanticSearch\Interfaces\OSSID;
 use OpenSemanticSearch\Interfaces\SearchInterface;
+use OpenSemanticSearch\Models\IndexedURL;
+use OpenSemanticSearch\Traits\http;
 use OpenSemanticSearch\Traits\json;
-use OpenSemanticSearch\Services\Service;
 
 /**
  * MetaDataService provides api for retrieving structured information from an implementation e.g. for populating fields added by MetaDataExtension.
@@ -16,6 +17,7 @@ use OpenSemanticSearch\Services\Service;
  */
 class MetaDataService extends Service implements MetaDataInterface {
 	use json;
+	use http;
 
 	const ServiceName = 'MetaDataService';
 
@@ -29,18 +31,27 @@ class MetaDataService extends Service implements MetaDataInterface {
 	/**
 	 * @param \DataObject|\OpenSemanticSearch\Interfaces\OSSID $model
 	 *
-	 * @return array|void
+	 * @return \DataObject
 	 * @throws \Modular\Exceptions\Exception
 	 */
 	public function populateMetaData($model) {
 		if (!$this->validModel($model)) {
-			$this->debug_fail(new Exception("Invalid model passed"));
+			$this->debug_fail(new Exception("Invalid model passed, it may not exist anymore or not have the correct extensions"));
 		}
-		$indexed = $this->searcher->findByID( $model->OSSID() );
+		/** @var \OpenSemanticSearch\Results\Result $result */
+		if ($result = $this->searcher->find( $model )) {
+			/** @var \ArrayList $models */
+			if ($models = $result->models()) {
+				if ($found = $models->first()) {
+					$model->updateOSSMetaData($found);
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
-	 * @param \DataObject $model
+	 * @param \File|\Page|IndexedURL|\DataObject $model
 	 *
 	 * @return bool
 	 */

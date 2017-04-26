@@ -13,7 +13,10 @@ use OpenSemanticSearch\Traits\remover;
  * @package OpenSemanticSearch
  */
 abstract class ModelExtension extends \DataExtension implements OSSID {
-	use model, adder, metadata, remover;
+	use model,      // provides onAfterWrite and onAfterDelete hooks
+		adder,      // provides queuing or execution of index add task
+		metadata,   // provides queuing or execution of metadata task
+		remover;    // provides queuing or execution of index removal task
 
 	public function owner() {
 		return $this->owner;

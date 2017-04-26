@@ -163,7 +163,7 @@ class OpenSemanticSearchTest extends FunctionalTest {
 	}
 
 	public function testRemovePath() {
-		$this->assertTrue($this->indexingService()->removePath( $this->testFilePaths[0]), "That removing a file works");
+		$this->assertTrue($this->indexingService()->removeFilePath( $this->testFilePaths[0]), "That removing a file works");
 		sleep(self::IndexWait);
 		$this->assertNotFound($this->searchService()->findFile( $this->testFilePaths[0]), "That file doesn't exist in index after removal");
 	}
@@ -176,14 +176,14 @@ class OpenSemanticSearchTest extends FunctionalTest {
 			$path = $this->testFilePaths[ $i];
 
 			$this->assertFound( $this->searchService()->findFile( $path ), "That file $path exists in index after adding directory" );
-			$this->assertTrue( $this->indexingService()->removePath( $path ), "That removing file $path works after adding its directory" );
+			$this->assertTrue( $this->indexingService()->removeFilePath( $path ), "That removing file $path works after adding its directory" );
 			$this->assertNotFound( $this->searchService()->findFile( $path ), "That file $path doesn't exist in index after removal of file (not directory)" );
 		}
 	}
 
 	public function testRemoveDirectory() {
 		$this->assertTrue($this->indexingService()->addDirectory( $this->testAssetsDir), "That adding a directory $this->testAssetsDir works");
-		$this->assertTrue( $this->indexingService()->removePath( $this->testAssetsDir ), "That removing directory $this->testAssetsDir works after adding its directory" );
+		$this->assertTrue( $this->indexingService()->removeFilePath( $this->testAssetsDir ), "That removing directory $this->testAssetsDir works after adding its directory" );
 
 		for ( $i = 0; $i < 2; $i ++ ) {
 			$path = $this->testFilePaths[ $i ];

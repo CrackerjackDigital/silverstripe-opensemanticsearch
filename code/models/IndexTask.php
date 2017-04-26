@@ -47,33 +47,34 @@ class IndexTask extends QueuedTask {
 	 * @param string             $resultMessage
 	 *
 	 * @return mixed|void
+	 * @throws \Exception
 	 * @throws \ValidationException
 	 */
 	public function execute( $params = [], &$resultMessage = '' ) {
 		$this->trackable_start( __FUNCTION__, "Processing task '$this->Title'" );
+		$this->markRunning();
 
-		set_time_limit( $this->timeout() );
+		$this->timeout();
 
 		$res = false;
 
 		$resultMessage = '';
 
-		$this->debugger()->set_error_exception();
+		$this->debugger()->set_error_exception( $resultMessage );
 		try {
-			$this->markRunning();
 
 			$action = $this()->{IndexAction::Name};
 			$item   = $this()->{IndexedItem::relationship_name()}();
 
 			switch ( $action ) {
 				case IndexAction::Add:
-					$this->service->add( $item, $resultMessage );
+					$res = $this->service->add( $item, $resultMessage );
 					break;
 				case IndexAction::Remove:
-					$this->service->remove( $item, $resultMessage );
+					$res = $this->service->remove( $item, $resultMessage );
 					break;
 				case IndexAction::ReIndex:
-					$this->service->reindex( $item, $resultMessage );
+					$res = $this->service->reindex( $item, $resultMessage );
 					break;
 				default:
 					throw new Exception( "Unknown IndexTask action '$action'" );
@@ -86,10 +87,12 @@ class IndexTask extends QueuedTask {
 		}
 
 		if ( $res ) {
-			$this->success( $resultMessage );
+			// will mark as complete
+			$this->markSuccessful( $resultMessage );
 
 		} else {
-			$this->fail( $resultMessage );
+			// will mark as complete, message could still be 'OK' if failure not a bad thing
+			$this->markFailed( $resultMessage );
 		}
 		$resultMessage = "task ended with: '$resultMessage'";
 		$this->trackable_end( $resultMessage );
@@ -110,7 +113,7 @@ class IndexTask extends QueuedTask {
 	public function onBeforeWrite() {
 		parent::onBeforeWrite();
 		if ( ! $this->Title ) {
-			if ($indexedItem = $this->{IndexedItem::relationship_name()}()) {
+			if ( $indexedItem = $this->{IndexedItem::relationship_name()}() ) {
 				$title = $indexedItem->Title;
 			} else {
 				$title = "Index Task";

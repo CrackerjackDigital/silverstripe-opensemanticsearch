@@ -22,13 +22,14 @@ trait metadata {
 	 * Retrieve meta data for an item via a queued task
 	 */
 	protected function metadata( $item ) {
-		return \Injector::inst()->create( 'MetaDataTask' )->dispatch(
+		return \Injector::inst()->create(
+			'MetaDataTask',
 			[
-				Title::Name               => "Queueing MetaData task for '" . $this->owner()->Title . "'",
-				IndexedItem::field_name() => $item->ID,
+				Title::Name                     => "Get MetaData for '" . $this->owner()->Title . "'",
+				IndexedItem::field_name()       => $item->ID,
 				IndexedItem::class_field_name() => $item->ClassName,
 			]
-		);
+		)->dispatch();
 	}
 
 }

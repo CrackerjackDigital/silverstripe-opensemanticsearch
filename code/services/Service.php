@@ -3,8 +3,10 @@
 namespace OpenSemanticSearch\Services;
 
 use Controller;
+use Modular\Interfaces\HTTP as HTTPInterface;
 use Modular\Traits\debugging;
 use OpenSemanticSearch\Interfaces\ServiceInterface;
+use OpenSemanticSearch\Traits\http;
 
 /**
  * Service represents an Open Semantic Search service which consists of two parts, the OSS provided service which adds, removes and updates
@@ -15,7 +17,7 @@ use OpenSemanticSearch\Interfaces\ServiceInterface;
  * @package OpenSemanticSearch
  */
 abstract class Service extends \Object implements ServiceInterface {
-	use debugging;
+	use debugging, http;
 
 	// ctor provided options, may be combined with e.g. options passed as a parameter or config options.
 	protected $options;
@@ -138,50 +140,6 @@ abstract class Service extends \Object implements ServiceInterface {
 	}
 
 	/**
-	 * Given a raw response return something sensible given the encoding defined for the environment.
-	 *
-	 * @param string $service  responding
-	 * @param string $endpoint responding
-	 * @param string $responseBody
-	 *
-	 * @return mixed e.g. an array from json_decode
-	 */
-	protected function decodeResponse( $service, $endpoint = '', $responseBody ) {
-		$method = $this->option( $this->option( 'encoding' ), $service ) . 'Decode';
-
-		return $this->decode( $responseBody );
-	}
-
-	/**
-	 * Should be provided in a derived class, e.g via the json trait
-	 *
-	 * @param $data
-	 *
-	 * @return mixed
-	 */
-	abstract public function decode( $data );
-
-	/**
-	 * Encode request data to something the service at the other end can understand, e.g. json. Set the correct headers for the service etc
-	 *
-	 * @param string $service  being called
-	 * @param string $endpoint being called
-	 * @param mixed  $requestData
-	 *
-	 * @return string
-	 */
-	protected function encodeRequest( $service, $endpoint = '', $requestData ) {
-		$method = $this->option( $this->option( 'encoding' ), $service ) . 'Encode';
-
-		return $this->encode( $requestData );
-	}
-
-	/**
-	 * Should be provided in a derived class, e.g via the json trait
-	 */
-	abstract public function encode( $data );
-
-	/**
 	 * Returns a built token for a name ready to replace in a string.
 	 *
 	 * @param string $token e.g. 'endpoint'
@@ -279,10 +237,13 @@ abstract class Service extends \Object implements ServiceInterface {
 	 *
 	 * @param string $localPath relative to assets path, e.g. 'documents/2017/good/paper.pdf' or relative to web root e.g '/document-library/fred.pdf'
 	 *
+	 * @param string $scheme    if provided prefix the output with this
+	 *
 	 * @return string e.g. '/mnt/files/assets/documents/2017/good/paper.pdf' or '' if no matching local path
 	 */
-	public function localToRemotePath( $localPath ) {
+	public function localToRemotePath( $localPath, $scheme = HTTPInterface::SchemeFile ) {
 		$localPath = parse_url( $localPath, PHP_URL_PATH );
+		$link      = '';
 
 		if ( $path = $this->relativePath( $localPath ) ) {
 			if ( $map = $this->option( 'path_map' ) ) {
@@ -293,13 +254,17 @@ abstract class Service extends \Object implements ServiceInterface {
 					if ( $local == substr( $path, 0, strlen( $local ) ) ) {
 
 						// strip off the local path and append the rest to the remote path
-						return Controller::join_links( $remote, substr( $path, strlen( $local ) ) );
+						$link = Controller::join_links( $remote, substr( $path, strlen( $local ) ) );
+						if ( $scheme ) {
+							$link = $this->rebuildURL( $link, [ HTTPInterface::PartScheme => 'file' ] );
+						}
+						break;
 					}
 				}
 			}
 		}
 
-		return '';
+		return $link;
 	}
 
 	/**
@@ -308,9 +273,13 @@ abstract class Service extends \Object implements ServiceInterface {
 	 *
 	 * @param string $remotePath as indexed by the indexing service.
 	 *
+	 * @param string $stripScheme if provided then remove this schema from front of path if found
+	 *
 	 * @return string of local path or '' if not found/invalid
 	 */
-	public function remoteToLocalPath( $remotePath ) {
+	public function remoteToLocalPath( $remotePath, $stripScheme = HTTPInterface::SchemeFile ) {
+		$localPath = '';
+
 		$path = parse_url( $remotePath, PHP_URL_PATH );
 		if ( $map = $this->option( 'path_map' ) ) {
 			// e.g. local = '/assets/', remote = '/mount/files/assets/'
@@ -321,15 +290,19 @@ abstract class Service extends \Object implements ServiceInterface {
 
 					// strip off the remote path and append the rest to the local path
 					$localPath = Controller::join_links( $local, substr( $path, strlen( $remote ) ) );
+					if ($stripScheme) {
+						$localPath = $this->rebuildURL( $localPath, [ HTTPInterface::PartScheme => '' ]);
+					}
 					if ( $this->isSafe( $localPath ) ) {
 						// only return if it's safe to reference
-						return ltrim( $localPath, '/' );
+						$localPath = ltrim( $localPath, '/' );
 					}
+					break;
 				}
 			}
 		}
 
-		return '';
+		return $localPath;
 	}
 
 	/**

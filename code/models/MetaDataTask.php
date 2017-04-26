@@ -2,9 +2,11 @@
 
 namespace OpenSemanticSearch\Models;
 
+use Modular\Models\QueuedServiceTask;
 use Modular\Models\QueuedTask;
 use OpenSemanticSearch\Exceptions\Exception;
 use OpenSemanticSearch\Extensions\MetaDataExtension;
+use OpenSemanticSearch\Fields\IndexedItem;
 use OpenSemanticSearch\Interfaces\MetaDataInterface;
 use OpenSemanticSearch\Services\MetaDataService;
 
@@ -17,19 +19,8 @@ use OpenSemanticSearch\Services\MetaDataService;
 class MetaDataTask extends QueuedTask {
 	const QueueName = 'OpenSemanticSearch';
 
-	const LimitParam = 'limit';
-	const FilterParam = 'filter';
-
-	// if filter param is this then all files will be indexed
-	const FilterAll = 'all';
-	// if no filter passed then only files with no retrieved date will be updated
-	const FilterDefault = '';
-
-	private static $singular_name = 'Information retrieval Task';
-	private static $plural_name = 'Information retrieval Tasks';
-
-	// process this many things at a time
-	private static $batch_size = 5;
+	private static $singular_name = 'Search MetaData retrieval Task';
+	private static $plural_name = 'Search MetaData retrieval Tasks';
 
 	/** @var  \OpenSemanticSearch\Interfaces\MetaDataInterface set by Injector */
 	private $service;
@@ -39,52 +30,22 @@ class MetaDataTask extends QueuedTask {
 	}
 
 	/**
-	 * @param array|\ArrayAccess $params
-	 * @param string  $resultMessage
+	 * Look for files which haven't had their meta data updated by checking the MetaDataRetrievedDate field
+	 * and get the MetaData from the search index, updating the file object fields added by the MetaDataExtension.
 	 *
-	 * @return mixed|void
+	 * @param array|\ArrayAccess $params
+	 * @param string             $resultMessage
+	 *
+	 * @return bool true if executed succesfully, false otherwise (and should have set $resultMessage with reason)
 	 * @throws \InvalidArgumentException
 	 * @throws \Modular\Exceptions\Exception
 	 */
 	public function execute( $params = [], &$resultMessage = '' ) {
-		set_time_limit( $this->timeout() );
-
-		$files = \File::get();
-
-		$resultMessage = '';
-
-		$filter = isset($params[self::FilterParam])
-			? $params[self::FilterParam]
-			: self::FilterDefault;
-
-		if ($filter == self::FilterDefault) {
-			$files = $files->filter([
-				MetaDataExtension::RetrievedDateField => '',
-			]);
-		} elseif ( is_int( $filter ) ) {
-			// int = ID of file to get info for
-			$files = $files->filter( [
-				'ID' => $filter
-			] );
-		} else {
-			$resultMessage = "Bad filter parameter '" . $filter . "'";
-			$this->debug_fail( new Exception( $resultMessage ) );
+		if ($item = $this->{IndexedItem::relationship_name()}()) {
+			return count($this->service->populateMetaData( $item));
 		}
-
-		$limit = array_key_exists(self::LimitParam, $params)
-			? $params[self::LimitParam]
-			: $this->config()->get('batch_size');
-
-		if (is_int($limit)) {
-			$files = $files->limit( $limit);
-		}
-
-		$service = MetaDataService::get();
-		/** @var \File $file */
-		foreach ( $files as $file ) {
-			if ( $result = $service->findByID( $file) ) {
-
-			}
-		}
+		return false;
 	}
+
+
 }

@@ -1,6 +1,8 @@
 <?php
+
 namespace OpenSemanticSearch\Traits;
 
+use Modular\Fields\Title;
 use OpenSemanticSearch\Fields\IndexAction;
 use OpenSemanticSearch\Fields\IndexedItem;
 
@@ -15,15 +17,18 @@ trait remover {
 	 * Remove an item from the index via a queued task
 	 *
 	 * @param \DataObject $item for the task to index
+	 *
+	 * @return
 	 */
-	protected function remove( $item ) {
-		return \Injector::inst()->get( 'IndexTask' )->execute(
+	protected function remove( $item) {
+		return \Injector::inst()->create(
+			'IndexTask',
 			[
-				IndexAction::Name => IndexAction::Remove,
-			    IndexedItem::field_name() => $item->ID,
-			    IndexedItem::class_field_name() => $item->ClassName
+				Title::Name                     => "Remove '" . $this->owner()->Title . "' from index",
+				IndexAction::Name               => IndexAction::Remove,
+				IndexedItem::field_name()       => $item->ID,
+				IndexedItem::class_field_name() => $item->ClassName
 			]
-		);
+		)->dispatch();
 	}
-
 }

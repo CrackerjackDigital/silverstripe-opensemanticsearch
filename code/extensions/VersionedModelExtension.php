@@ -1,4 +1,5 @@
 <?php
+
 namespace OpenSemanticSearch\Extensions;
 
 use OpenSemanticSearch\Interfaces\OSSID;
@@ -13,7 +14,10 @@ use OpenSemanticSearch\Traits\versioned_model;
  * @package OpenSemanticSearch
  */
 abstract class VersionedModelExtension extends \DataExtension implements OSSID {
-	use versioned_model, adder, metadata, remover;
+	use versioned_model,      // provides onAfterPublish and onAfterUnpublish hooks
+		adder,                // provides queuing or execution of index add task
+		metadata,             // provides queuing or execution of metadata task
+		remover;              // provides queuing or execution of index removal task
 
 	public function owner() {
 		return $this->owner;

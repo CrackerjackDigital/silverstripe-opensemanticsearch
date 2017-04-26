@@ -16,17 +16,20 @@ trait adder {
 	/**
 	 * Add an item to index via a queued task
 	 *
-	 * @param array $data to add to task when created, e.g. [ 'FileID' => 1212 ] or [ 'PageID' => 223 ]
+	 * @param \DataObject $item to add to queue
+	 *
+	 * @return
 	 */
 	protected function add( $item ) {
-		return \Injector::inst()->get( 'IndexTask' )->execute(
+		return \Injector::inst()->create(
+			'IndexTask',
 			[
-				Title::Name               => "Add '" . $this->owner()->Title . "'",
-				IndexAction::Name         => IndexAction::Add,
-				IndexedItem::field_name() => $item->ID,
-				IndexedItem::class_field_name() => $item->ClassName
+				Title::Name                     => "Add '" . $this->owner()->Title . "' to index",
+				IndexAction::Name               => IndexAction::Add,
+				IndexedItem::field_name()       => $item->ID,
+				IndexedItem::class_field_name() => $item->ClassName,
 			]
-		);
+		)->dispatch();
 	}
 
 }

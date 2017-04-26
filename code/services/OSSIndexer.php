@@ -3,6 +3,7 @@
 namespace OpenSemanticSearch\Services;
 
 use Modular\Exceptions\Exception;
+use Modular\Interfaces\HTTP as HTTPInterface;
 use OpenSemanticSearch\Interfaces\OSSID;
 use OpenSemanticSearch\Results\ErrorResult;
 use OpenSemanticSearch\Results\OSSResult;
@@ -19,9 +20,8 @@ use SiteTree;
  * @package OpenSemanticSearch
  */
 class OSSIndexer extends IndexService {
-	use json, http {
-		http::request as httpRequest;
-	}
+	use json, http;
+
 	// for http::request
 	private static $context_options = [
 	];
@@ -34,26 +34,40 @@ class OSSIndexer extends IndexService {
 	const EndpointRemove    = 'delete';
 
 	/**
-	 * Makes a request and checks it's validity according to it's type. Returns a response corresponding to the type (e.g. SolrJSONResponse). Returns an
+	 * Given a raw response return something sensible given the encoding (e.g. json), headers and the body content.
 	 *
-	 * @param string             $service
-	 * @param string             $endpoint
-	 * @param array|\ArrayAccess $params
-	 * @param null               $data
-	 * @param array              $tokens
+	 * @param string $service  responding
+	 * @param string $endpoint responding
+	 * @param string $responseBody
+	 * @param array  $responseHeaders
 	 *
-	 * @return \OpenSemanticSearch\Interfaces\ResultInterface could be an ErrorResponse or e.g. SolrJSONResponse
-	 * @throws \OpenSemanticSearch\Exceptions\Exception
+	 * @param string $responseCodeKey
+	 *
+	 * @return mixed e.g. an array from json_decode
+	 * @internal param $responseCode
+	 * @internal param string $responseCodeKey
 	 */
-	public function request( $service, $endpoint, $params = [], $data = null, $tokens = [] ) {
-		// parent::request will call request in http extension
-		if ( false !== ( $decoded = $this->httpRequest( $service, $endpoint, $params, $data, $tokens ) ) ) {
-			$response = OSSResult::create( $decoded );
+	protected function decodeResponse( $service, $endpoint = '', $responseBody, $responseHeaders = [], $responseCodeKey = 'ResponseCode' ) {
+		$responseHeaders = $responseHeaders ?: $this->parseHTTPResponseHeaders( $http_response_header );
+		$responseCode    = $responseCodeKey && isset( $responseHeaders[ $responseCodeKey ] )
+			? $responseHeaders[ $responseCodeKey ]
+			: '';
+
+		if ( $responseCode && ! $this->responseCodeIsOK( $responseCode ) ) {
+			$result = new ErrorResult();
 		} else {
-			$response = ErrorResult::create( "Request returned no valid data", print_r( $decoded, true ) );
+			// we got no response code in headers or it was OK, also decode from body
+			$data = $this->decode( $responseBody );
+			if ( $data === false ) {
+				$result = new ErrorResult();
+
+			} else {
+				$result = new OSSResult( $responseCode, $data );
+
+			}
 		}
 
-		return $response;
+		return $result;
 	}
 
 	/**
@@ -72,9 +86,15 @@ class OSSIndexer extends IndexService {
 			$result = $this->addFile( $item->Link() );
 		} elseif ( $item instanceof \Page ) {
 			$result = $this->addPage( $item );
-		} else {
+		} elseif ( $item->hasMethod( 'OSSID' ) ) {
+			// item should have a Link method which returns the URL
+			$result = $this->addURL( $item->OSSID() );
+
+		} elseif ( $item->hasMethod( 'Link' ) ) {
 			// the model should have a Link method which returns the url to index
 			$result = $this->addURL( $item->Link() );
+		} else {
+			$result = false;
 		}
 
 		return $result;
@@ -90,15 +110,25 @@ class OSSIndexer extends IndexService {
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
 	public function remove( $item, &$resultMessage = '' ) {
-		if ( $item instanceof \Folder ) {
-			$result = $this->removePath( $item->Link() );
-		} elseif ( $item instanceof \File ) {
-			$result = $this->removePath( $item->Link() );
+		if ( $item instanceof \File ) {
+			// handle File and Folder
+			if ( $filename = $item->trackedValue( 'Filename' ) ) {
+				$this->removeFilePath( $filename );
+			}
+			$result = $this->removeFilePath( $item->Link() );
+
 		} elseif ( $item instanceof \Page ) {
 			$result = $this->removePage( $item );
-		} else {
+
+		} elseif ( $item->hasMethod( 'OSSID' ) ) {
+			// item should have a Link method which returns the URL
+			$result = $this->removeURL( $item->OSSID() );
+
+		} elseif ( $item->hasMethod( 'Link' ) ) {
 			// item should have a Link method which returns the URL
 			$result = $this->removeURL( $item->Link() );
+		} else {
+			$result = false;
 		}
 
 		return $result;
@@ -119,6 +149,7 @@ class OSSIndexer extends IndexService {
 		if ( $result = $this->remove( $item, $resultMessage ) ) {
 			$result = $this->add( $item, $resultMessage );
 		}
+
 		return $result;
 	}
 
@@ -130,18 +161,7 @@ class OSSIndexer extends IndexService {
 	 * @api
 	 */
 	public function addFile( $localPath ) {
-		if ( ! $this->relativePath( $localPath ) ) {
-			// doesn't exist in file system or not in a safe place
-			return false;
-		}
-
-		return $this->request(
-			self::ServiceOSS,
-			self::EndpointIndexFile,
-			[
-				'uri' => $this->localToRemotePath( $localPath ),
-			]
-		)->isOK();
+		return $this->addFilePath( $localPath, self::EndpointIndexFile );
 	}
 
 	/**
@@ -152,16 +172,54 @@ class OSSIndexer extends IndexService {
 	 * @api
 	 */
 	public function addDirectory( $localPath ) {
-		if ( ! $this->relativePath( $localPath ) ) {
-			// doesn't exist in file system or not in a safe place
+		return $this->addFilePath( $localPath, self::EndpointIndexDir );
+	}
+
+	/**
+	 * @param string $localPath
+	 * @param string $endpoint e.g. self.EndpointIndexFile or self.EndpointIndexDir
+	 *
+	 * @return bool
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
+	 */
+	public function addFilePath( $localPath, $endpoint ) {
+		if ( ! $remotePath = $this->localToRemotePath( $localPath ) ) {
+			// doesn't exist in file system or not in a safe place or mappable to a remote path
 			return false;
 		}
 
+		$uri = $this->rebuildURL( $remotePath , [ HTTPInterface::PartScheme => 'file' ] );
+
 		return $this->request(
 			self::ServiceOSS,
-			self::EndpointIndexDir,
+			$endpoint,
 			[
-				'uri' => $this->localToRemotePath( $localPath ),
+				'uri' => $uri,
+			]
+		)->isOK();
+
+	}
+
+	/**
+	 * Removes a file or directory from index.
+	 *
+	 * @param string $localPath relative to assets folder or absolute from web root of file to add to index.
+	 *
+	 * @return bool
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
+	 * @api
+	 */
+	public function removeFilePath( $localPath ) {
+		if ( ! $remotePath = $this->localToRemotePath( $localPath ) ) {
+			return false;
+		}
+		$uri = $this->rebuildURL( $remotePath, [ HTTPInterface::PartScheme => 'file' ] );
+
+		return $this->request(
+			self::ServiceOSS,
+			self::EndpointRemove,
+			[
+				'uri' => $uri,
 			]
 		)->isOK();
 	}
@@ -184,43 +242,6 @@ class OSSIndexer extends IndexService {
 		}
 
 		return $this->addURL( $page->Link() );
-	}
-
-	/**
-	 * Add a url to the index, no further checks are made e.g. to check the url is one from this site but it is indexed verbatim.
-	 *
-	 * @param $url
-	 *
-	 * @return bool
-	 * @throws \OpenSemanticSearch\Exceptions\Exception
-	 */
-	public function addURL( $url ) {
-		return $this->request(
-			self::ServiceOSS,
-			self::EndpointIndexURL,
-			[
-				'uri' => $url,
-			]
-		)->isOK();
-	}
-
-	/**
-	 * Removes a file or directory from index.
-	 *
-	 * @param string $localPath relative to assets folder or absolute from web root of file to add to index.
-	 *
-	 * @return bool
-	 * @throws \OpenSemanticSearch\Exceptions\Exception
-	 * @api
-	 */
-	public function removePath( $localPath ) {
-		return $this->request(
-			self::ServiceOSS,
-			self::EndpointRemove,
-			[
-				'uri' => $this->localToRemotePath( $localPath ),
-			]
-		)->isOK();
 	}
 
 	/**
@@ -250,6 +271,26 @@ class OSSIndexer extends IndexService {
 	}
 
 	/**
+	 * Add a url to the index, no further checks are made e.g. to check the url is one from this site but it is indexed verbatim.
+	 *
+	 * @param $url
+	 *
+	 * @return bool
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
+	 */
+	public function addURL( $url ) {
+		return $this->request(
+			self::ServiceOSS,
+			self::EndpointIndexURL,
+			[
+				'uri' => $url,
+			]
+		)->isOK();
+	}
+
+	/**
+	 * Remove an index entry by url
+	 *
 	 * @param string $url
 	 *
 	 * @return mixed
