@@ -39,9 +39,9 @@ class IndexTask extends QueuedTask {
 	 * @var array
 	 */
 	private static $unique_fields = [
-		\Modular\Fields\Title::Name                         => false,
-		\OpenSemanticSearch\Fields\IndexedItem::Name . 'ID' => true,
-		\OpenSemanticSearch\Fields\IndexAction::Name        => true,
+		\Modular\Fields\Title::Name                  => false,
+		\OpenSemanticSearch\Fields\IndexedItem::Name => true,
+		\OpenSemanticSearch\Fields\IndexAction::Name => true,
 	];
 
 	/** @var  \OpenSemanticSearch\Interfaces\IndexInterface|OSSIndexer set by Injector */
