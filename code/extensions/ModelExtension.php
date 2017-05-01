@@ -1,7 +1,6 @@
 <?php
 namespace OpenSemanticSearch\Extensions;
 
-use OpenSemanticSearch\Interfaces\OSSID;
 use OpenSemanticSearch\Traits\adder;
 use OpenSemanticSearch\Traits\metadata;
 use OpenSemanticSearch\Traits\model;
@@ -12,7 +11,7 @@ use OpenSemanticSearch\Traits\remover;
  *
  * @package OpenSemanticSearch
  */
-abstract class ModelExtension extends \DataExtension implements OSSID {
+abstract class ModelExtension extends \Modular\ModelExtension {
 	use model,      // provides onAfterWrite and onAfterDelete hooks
 		adder,      // provides queuing or execution of index add task
 		metadata,   // provides queuing or execution of metadata task

@@ -291,7 +291,7 @@ abstract class Service extends \Object implements ServiceInterface {
 					// strip off the remote path and append the rest to the local path
 					$localPath = Controller::join_links( $local, substr( $path, strlen( $remote ) ) );
 					if ($stripScheme) {
-						$localPath = $this->rebuildURL( $localPath, [ HTTPInterface::PartScheme => '' ]);
+						$localPath = $this->rebuildURL( $localPath, [ HTTPInterface::PartScheme => null ]);
 					}
 					if ( $this->isSafe( $localPath ) ) {
 						// only return if it's safe to reference

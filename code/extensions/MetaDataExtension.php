@@ -2,9 +2,11 @@
 
 namespace OpenSemanticSearch\Extensions;
 
-use DataExtension;
+use FieldList;
+use Modular\Fields\DateTimeField;
+use Modular\Forms\TabField;
+use Modular\Interfaces\Mappable;
 use Modular\Traits\bitfield;
-use OpenSemanticSearch\Exceptions\Exception;
 use Modular\Traits\mappable_map_map;
 use Modular\Traits\mappable_mapper;
 use Modular\Traits\mappable_model;
@@ -18,8 +20,11 @@ use Modular\Traits\mappable_model;
  * @property string $OSSPath
  * @property string $OSSRetrievedDate
  */
-class MetaDataExtension extends DataExtension {
-	use bitfield, mappable_model, mappable_mapper, mappable_map_map;
+class MetaDataExtension extends ModelExtension {
+	use bitfield,
+		mappable_model,
+		mappable_mapper,
+		mappable_map_map;
 
 	const AuthorField        = 'OSSAuthor';          // field for authors
 	const PathField          = 'OSSPath';            // path on service (e.g Solr)
@@ -30,30 +35,73 @@ class MetaDataExtension extends DataExtension {
 		self::PathField          => 'Text',
 		self::RetrievedDateField => 'SS_DateTime',
 	];
-
-	private static $quaff_map = [
+	/**
+	 * Map from solr result via solarium client to this extensions fields
+	 *
+	 * @var array
+	 */
+	private static $mappable_map = [
 		'solarium' => [
-
+			'author[]' => 'updateOSSAuthors()',
 		],
 	];
 
+	/**
+	 * @param \FieldList $fields
+	 *
+	 * @return array
+	 *
+	 */
+	public function updateCMSFields(FieldList $fields) {
+		if ($fields->hasTabSet()) {
+			$fields->addFieldsToTab(
+				'Root.SearchIndexFields',
+				[
+					new \ReadonlyField( self::AuthorField ),
+					new \ReadonlyField( self::PathField ),
+					new \ReadonlyField( self::RetrievedDateField ),
+				]
+			);
+		}
+	}
+
+	/**
+	 * Called by traits, if exhibited on an extension this should return the owner, if exhibited
+	 * on a model this should return the model itself.
+	 *
+	 * @return \DataObject|\Modular\Interfaces\Mappable
+	 */
 	public function model() {
 		return $this->owner;
+	}
+
+	public function updateOSSAuthors($data) {
+		if (!$this()->Authors()->count()) {
+
+		}
 	}
 
 	/**
 	 * Update the model mapping incoming fields to the model fields.
 	 *
-	 * @param array  $data
 	 * @param string $source key used to look up a suitable map in config.quaff_map
+	 * @param array  $data
 	 *
-	 * @throws \Modular\Exceptions\Mappable
+	 * @param int    $options
+	 *
+	 * @return $this
 	 * @throws \ValidationException
-	 * @throws null
-	 * @internal param array $map e.g. from json_decoded item from a search on solr.
 	 */
-	public function updateOSSMetaData( array $data, $source = 'solarium' ) {
-		$this->model()->mappableUpdate( $data, $source );
+	public function updateOSSMetaData( $source = 'solarium', array $data = [], $options = Mappable::DefaultMappableOptions ) {
+		$model = $this->model();
+
+		$model->mappableUpdate( $source, $data, $options );
+		$model->update( [
+			self::RetrievedDateField => DateTimeField::now(),
+		] );
+		$model->write();
+
+		return $this;
 	}
 
 }

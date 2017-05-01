@@ -114,14 +114,6 @@ class ErrorResult extends Result implements ResultInterface {
 		return 0;
 	}
 
-	/**
-	 * Return the response data in a decoded format, e.g if the response is in json, then a json_decoded array
-	 *
-	 * @return array
-	 */
-	public function data() {
-		return $this->data;
-	}
 
 	/**
 	 * Return the number of items requested, or null if no limit

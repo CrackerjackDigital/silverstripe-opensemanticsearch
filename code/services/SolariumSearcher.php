@@ -2,14 +2,10 @@
 
 namespace OpenSemanticSearch\Services;
 
-use OpenSemanticSearch\Interfaces\OSSID;
-use OpenSemanticSearch\Results\SolariumResult;
 use OpenSemanticSearch\Traits\array_bitfield_map;
 use OpenSemanticSearch\Traits\http;
 use OpenSemanticSearch\Traits\json;
 use OpenSemanticSearch\Traits\solarium;
-use Solarium\Client;
-use Solarium\Core\Client\Endpoint;
 
 /**
  * SolariumSearcher SearchInterface implementation which uses the Solarium library https://packagist.org/packages/solarium/solarium

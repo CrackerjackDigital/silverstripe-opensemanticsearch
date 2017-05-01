@@ -9,7 +9,7 @@ trait versioned_model {
 
 	abstract function remove( $item );
 
-	abstract function OSSID();
+	abstract function OSSID($prefixSchema = false);
 
 	/**
 	 * @return \Page

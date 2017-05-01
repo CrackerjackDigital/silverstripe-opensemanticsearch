@@ -10,9 +10,13 @@ namespace OpenSemanticSearch\Interfaces;
 interface OSSID {
 	// convenience, keep in sync with the method name that returns the ID
 	const IDMethod = 'OSSID';
+
 	/**
 	 * Return the ID of the model as it would be in OSS, e.g. in the case of a file it would be the Filename field
+	 *
+	 * @param bool $prefixSchema set to true to have id prefixed with a schema, e.g. 'file://' or 'http://'
+	 *
 	 * @return mixed
 	 */
-	public function OSSID();
+	public function OSSID($prefixSchema = false);
 }

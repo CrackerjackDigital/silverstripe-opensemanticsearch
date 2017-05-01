@@ -2,9 +2,6 @@
 
 namespace OpenSemanticSearch\Results;
 
-use Modular\Exceptions\NotImplemented;
-use OpenSemanticSearch\Results\Result;
-
 /**
  * OSSResult wraps a result returned from a call to OpenSemanticSearch endpoints.
  *
@@ -27,9 +24,12 @@ class OSSResult extends Result {
 	/**
 	 * Return empty list as no models returned by API.
 	 *
+	 * @param bool $updateMetaData if true then models will be updated from returned search results
+	 *                             via MetaDataExtension.updateOSSMetaData()
+	 *
 	 * @return \ArrayList
 	 */
-	public function models() {
+	public function models($updateMetaData = false) {
 		return new \ArrayList($this->items());
 	}
 

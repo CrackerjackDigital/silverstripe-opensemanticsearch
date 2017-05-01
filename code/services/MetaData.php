@@ -31,23 +31,23 @@ class MetaDataService extends Service implements MetaDataInterface {
 	/**
 	 * @param \DataObject|\OpenSemanticSearch\Interfaces\OSSID $model
 	 *
-	 * @return \DataObject
+	 * @return \DataObject|null
 	 * @throws \Modular\Exceptions\Exception
 	 */
 	public function populateMetaData($model) {
 		if (!$this->validModel($model)) {
 			$this->debug_fail(new Exception("Invalid model passed, it may not exist anymore or not have the correct extensions"));
 		}
-		/** @var \OpenSemanticSearch\Results\Result $result */
+		$found = false;
+
+		/** @var \OpenSemanticSearch\Results\OSSResult $result */
 		if ($result = $this->searcher->find( $model )) {
 			/** @var \ArrayList $models */
-			if ($models = $result->models()) {
-				if ($found = $models->first()) {
-					$model->updateOSSMetaData($found);
-				}
+			if ($models = $result->models(true)) {
+				$found = $models->first();
 			}
 		}
-		return null;
+		return $found;
 	}
 
 	/**

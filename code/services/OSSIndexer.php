@@ -3,6 +3,7 @@
 namespace OpenSemanticSearch\Services;
 
 use Modular\Exceptions\Exception;
+use Modular\Extensions\Model\TrackedValue;
 use Modular\Interfaces\HTTP as HTTPInterface;
 use OpenSemanticSearch\Interfaces\OSSID;
 use OpenSemanticSearch\Results\ErrorResult;
@@ -101,7 +102,7 @@ class OSSIndexer extends IndexService {
 	}
 
 	/**
-	 * @param \DataObject $item
+	 * @param \DataObject|TrackedValue $item
 	 * @param string      $resultMessage
 	 *
 	 * @return bool
@@ -111,7 +112,10 @@ class OSSIndexer extends IndexService {
 	 */
 	public function remove( $item, &$resultMessage = '' ) {
 		if ( $item instanceof \File ) {
-			// handle File and Folder
+			// handles File and Folder
+
+			// if filename has changed we need to remove the old filename
+			// saved by TrackedValue extension
 			if ( $filename = $item->trackedValue( 'Filename' ) ) {
 				$this->removeFilePath( $filename );
 			}

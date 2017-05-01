@@ -2,26 +2,53 @@
 
 namespace OpenSemanticSearch\Results;
 
+use File;
+use OpenSemanticSearch\Exceptions\Exception;
+use OpenSemanticSearch\Extensions\MetaDataExtension;
 use OpenSemanticSearch\Interfaces\ResultInterface;
 use OpenSemanticSearch\Interfaces\ServiceInterface;
 use OpenSemanticSearch\Models\IndexedURL;
 use OpenSemanticSearch\Services\SolariumSearcher;
 use OpenSemanticSearch\Traits\json;
 use Modular\Interfaces\HTTP as HTTP;
+use Page;
 
 class SolariumResult extends Result implements ResultInterface {
 	use json;
 
-	public function __construct( $code = null, $data = null, $message = null ) {
-		parent::__construct( $code, $data, $message );
+	// Mapper requires a source name to select the map to use.
+	const MapperSourceName = 'solarium';
+
+	/**
+	 * SolariumResult constructor.
+	 *
+	 * @param mixed                              $code
+	 * @param \Solarium\Core\Query\Result\Result $result
+	 * @param string                             $message
+	 *
+	 * @throws \Solarium\Exception\RuntimeException
+	 * @throws \Solarium\Exception\UnexpectedValueException
+	 */
+	public function __construct( $code = null, $result = null, $message = null ) {
+		parent::__construct(
+			$code ?: $result->getResponse()->getStatusCode(),
+			$result,
+			$message ?: $result->getResponse()->getStatusMessage()
+		);
 	}
 
 	/**
-	 * @return \Traversable|array
+	 * @return array|\Traversable
+	 * @throws \Solarium\Exception\RuntimeException
+	 * @throws \Solarium\Exception\UnexpectedValueException
 	 */
 	public function items() {
-		$items   = [];
-		$decoded = $this->decode( $this->data() );
+		$items = [];
+		if ( $decoded = $this->data() ) {
+			$items = isset( $decoded['response']['docs'] )
+				? $decoded['response']['docs']
+				: [];
+		}
 
 		return $items;
 	}
@@ -29,77 +56,123 @@ class SolariumResult extends Result implements ResultInterface {
 	/**
 	 * Turn a decoded response from e.g. 'search' into SilverStripe models in a list, e.g of File and Page models.
 	 *
-	 * @param int $include bitfield of what models to include in results
+	 * @param bool $updateMetaData if true then found models will also be updated from the results from search index
+	 *                             using MetaDataExtensions.updateOSSMetaData()
+	 *
+	 * @param int  $include        bitfield of what models to include in results
 	 *
 	 * @return \ArrayList
-	 * @throws \InvalidArgumentException
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
+	 * @throws null
 	 */
-	public function models( $include = ServiceInterface::IncludeAll ) {
+	public function models( $updateMetaData = false, $include = ServiceInterface::IncludeAll ) {
 		$models = new \ArrayList();
+		try {
 
-		$service = SolariumSearcher::get();
+			$service = SolariumSearcher::get();
 
-		if ( $this->hasItems() ) {
-			$items = $this->items();
+			if ( $this->hasItems() ) {
+				$items = $this->items();
 
-			$files = [];
+				$fileNames = [];
 
-			foreach ( $items as $item ) {
-				$id     = $item['id'];
-				$scheme = parse_url( $id, PHP_URL_SCHEME );
+				foreach ( $items as $item ) {
+					$id     = $item['id'];
+					$scheme = parse_url( $id, PHP_URL_SCHEME );
 
-				if ( $scheme == HTTP::SchemeFile ) {
-					if ( ( $include & ServiceInterface::IncludeFiles ) === ServiceInterface::IncludeFiles ) {
-						if ( $filePathName = $service->remoteToLocalPath( $id ) ) {
-							$files[] = $filePathName;
+					if ( $scheme == HTTP::SchemeFile ) {
+						if ( ( $include & ServiceInterface::IncludeFiles ) === ServiceInterface::IncludeFiles ) {
+							if ( $filePathName = $service->remoteToLocalPath( $id ) ) {
+								$fileNames[] = $filePathName;
+							}
+						}
+					}
+				}
+				// preload files in one hit then can do a 'find' in them.
+				$files = \File::get()->filter( 'Filename', $fileNames );
+				foreach ( $items as $item ) {
+					$id     = $item['id'];
+					$scheme = parse_url( $id, PHP_URL_SCHEME );
+
+					if ( $scheme == HTTP::SchemeFile ) {
+						// deal with files
+						if ( ( $include & ServiceInterface::IncludeFiles ) === ServiceInterface::IncludeFiles ) {
+							if ( $filePathName = $service->remoteToLocalPath( $id ) ) {
+
+								/** @var MetaDataExtension|File $file */
+
+								if ( $file = $files->find( 'Filename', $filePathName ) ) {
+									if ( $updateMetaData ) {
+										$file->updateOSSMetaData( static::MapperSourceName, $item );
+									}
+									$models->push( $file );
+								}
+							}
+						}
+					} else if ( in_array( $scheme, [ HTTP::SchemeHTTP, HTTP::SchemeHTTPS ] ) ) {
+						// deal with pages/urls.
+						$path = parse_url( $id, PHP_URL_PATH );
+
+						if ( \Director::is_site_url( $id ) ) {
+							if ( ( $include & ServiceInterface::IncludeLocalPages ) === ServiceInterface::IncludeLocalPages ) {
+
+								/** @var MetaDataExtension|Page $page */
+
+								if ( $page = \SiteTree::get_by_link( $path ) ) {
+									if ( $updateMetaData ) {
+										$page->updateOSSMetaData( static::MapperSourceName, $item );
+									}
+									$models->push( $page );
+								}
+							}
+						} else if ( ( $include & ServiceInterface::IncludeRemoteURLs ) === ServiceInterface::IncludeRemoteURLs ) {
+							/** @var MetaDataExtension $model */
+
+							$model = IndexedURL::get()->filter( [
+								IndexedURL::URLField => $path,
+							] )->first();
+
+							if ( $model ) {
+								if ( $updateMetaData ) {
+									$model->updateOSSMetaData( static::MapperSourceName, $item );
+								}
+								$models->push( $model );
+							}
+
 						}
 					}
 				}
 			}
-			// preload files in one hit then can do a 'find' in them.
-			// TODO is this actually faster? Theoretically cuts down number of database accesses...
-			$files = \File::get()->filter( 'Filename', $files );
-			foreach ( $items as $item ) {
-				$id     = $item['id'];
-				$scheme = parse_url( $id, PHP_URL_SCHEME );
-
-				if ( HTTP::PartScheme == HTTP::SchemeFile ) {
-					if ( ( $include & ServiceInterface::IncludeFiles ) === ServiceInterface::IncludeFiles ) {
-						if ( $filePathName = $service->remoteToLocalPath( $id ) ) {
-							if ( !$file = $files->find( 'Filename', $filePathName ) ) {
-								$file = new \File();
-							}
-							$file->updateOSSMetaData($item);
-							$models->push( $file );
-						}
-					}
-				} else if ( in_array( $scheme, [ HTTP::SchemeHTTP, HTTP::SchemeHTTPS ] ) ) {
-					$path = parse_url( $id, PHP_URL_PATH );
-
-					if ( \Director::is_site_url( $id ) ) {
-						if ( ( $include & ServiceInterface::IncludeLocalPages ) === ServiceInterface::IncludeLocalPages ) {
-							if ( !$page = \SiteTree::get_by_link( $path ) ) {
-								$page = new \Page();
-								$page->updateOSSMetaData($item);
-							}
-							$models->push( $page );
-						}
-					} else if ( ( $include & ServiceInterface::IncludeRemoteURLs ) === ServiceInterface::IncludeRemoteURLs ) {
-						$models->push( new IndexedURL( [ IndexedURL::URLField => $path ] ) );
-					}
-				}
-			}
+		} catch ( \Exception $e ) {
+			throw new Exception( $e->getMessage(), $e->getCode(), $e );
 		}
 
 		return $models;
 	}
 
 	/**
-	 * Returns json_decoded response body.
+	 * Returns json decoded data
 	 *
-	 * @return string decoded json
+	 * @param null $data
+	 *
+	 * @return mixed
+	 * @throws \Solarium\Exception\RuntimeException
+	 * @throws \Solarium\Exception\UnexpectedValueException
 	 */
 	public function data( $data = null ) {
+		if ( func_num_args() ) {
+			$this->data = $data;
+		}
+
+		return $this->result()->getData();
+	}
+
+	/**
+	 * Convenience method to hint type of data.
+	 *
+	 * @return \Solarium\Core\Query\Result\Result
+	 */
+	protected function result() {
 		return $this->data;
 	}
 
@@ -107,21 +180,21 @@ class SolariumResult extends Result implements ResultInterface {
 	 * @return int
 	 */
 	public function start() {
-		return $this->getQuery()->getStart();
+		return $this->result()->getQuery()->getStart();
 	}
 
 	/**
 	 * @return int
 	 */
 	public function limit() {
-		return $this->getQuery()->getRows();
+		return $this->result()->getQuery()->getRows();
 	}
 
 	/**
 	 * @return bool
 	 */
 	public function hasItems() {
-		return $this->getNumFound() > 0;
+		return $this->result()->getNumFound() > 0;
 	}
 
 	/**
@@ -137,18 +210,18 @@ class SolariumResult extends Result implements ResultInterface {
 	 * @return bool
 	 */
 	public function isError() {
-		return ! $this->getStatus();
+		return ! $this->result()->getStatus();
 	}
 
 	/**
 	 * @return string
 	 */
 	public function resultMessage() {
-		return $this->getResponse()->getStatusMessage();
+		return $this->result()->getResponse()->getStatusMessage();
 	}
 
 	public function resultCode() {
-		return $this->getResponse()->getStatusCode();
+		return $this->result()->getResponse()->getStatusCode();
 	}
 
 	/**

@@ -19,8 +19,6 @@ trait model {
 
 	abstract function remove($item);
 
-	abstract function OSSID();
-
 	abstract function owner();
 
 	public function onBeforeWrite() {

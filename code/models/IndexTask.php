@@ -33,6 +33,17 @@ class IndexTask extends QueuedTask {
 
 	private static $default_sort = 'ID desc';
 
+	/**
+	 * Check for duplicates via the IndexedItemID not the Title.
+	 *
+	 * @var array
+	 */
+	private static $unique_fields = [
+		\Modular\Fields\Title::Name                         => false,
+		\OpenSemanticSearch\Fields\IndexedItem::Name . 'ID' => true,
+		\OpenSemanticSearch\Fields\IndexAction::Name        => true,
+	];
+
 	/** @var  \OpenSemanticSearch\Interfaces\IndexInterface|OSSIndexer set by Injector */
 	private $service;
 
@@ -46,7 +57,7 @@ class IndexTask extends QueuedTask {
 	 * @param array|\ArrayAccess $params
 	 * @param string             $resultMessage
 	 *
-	 * @return mixed|void
+	 * @return bool
 	 * @throws \Exception
 	 * @throws \ValidationException
 	 */
@@ -96,6 +107,8 @@ class IndexTask extends QueuedTask {
 		}
 		$resultMessage = "task ended with: '$resultMessage'";
 		$this->trackable_end( $resultMessage );
+
+		return $res;
 	}
 
 	public function IndexedItemType() {

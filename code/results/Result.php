@@ -38,6 +38,23 @@ abstract class Result extends \Object implements ResultInterface {
 	abstract public function items();
 
 	/**
+	 * Return the response data in a decoded format, e.g if the response is in json, then a json_decoded array.
+	 * If set to a custom object then may also return that object, implementation of other methods
+	 * will have to deal with extracting information from that object instead of using defaults in this class
+	 * (e.g. count) which expect an array or equivalent to be present e.g. from json_decode.
+	 *
+	 * @param mixed $data set data to this if provided.
+	 *
+	 * @return array
+	 */
+	public function data( $data = null ) {
+		if (func_num_args()) {
+			$this->data = $data;
+		}
+		return $this->data;
+	}
+
+	/**
 	 * @return bool
 	 */
 	public function hasItems() {
@@ -51,19 +68,6 @@ abstract class Result extends \Object implements ResultInterface {
 		return count( $this->items() );
 	}
 
-	/**
-	 * Return the raw data.
-	 *
-	 * @param mixed $data
-	 *
-	 * @return null
-	 */
-	public function data($data = null) {
-		if (func_num_args()) {
-			$this->data = $data;
-		}
-		return $this->data;
-	}
 
 	/**
 	 * Return opposite of isError
