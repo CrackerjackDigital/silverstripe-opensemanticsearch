@@ -36,9 +36,9 @@ trait solarium {
 
 			$query = $client->createRealtimeGet();
 
-			$localPath = $this->localToRemotePath( $item->OSSID() );
+			$remotePath = $this->localToRemotePath( $item->OSSID() );
 
-			$id = $query->getHelper()->escapeTerm( $localPath );
+			$id = $query->getHelper()->escapeTerm( $remotePath );
 
 			$query->addId( $id );
 
@@ -56,15 +56,6 @@ trait solarium {
 			throw new Exception( $e->getMessage(), $e->getCode(), $e );
 		}
 
-	}
-
-	/**
-	 * @param \Solarium\Core\Query\Result\Result $result
-	 *
-	 * @return bool
-	 */
-	public function responseIsOK( $result ) {
-		return fnmatch( '2*', $result->getResponse()->getStatusCode() );
 	}
 
 	/**
@@ -102,6 +93,8 @@ trait solarium {
 		$include = self::IncludeAll
 	) {
 		try {
+			$this->debugger()->trace("Searching for '$fullText'");
+
 			$client = $this->createClient( $options );
 
 			$query = $client->createSelect( $options );
@@ -133,6 +126,8 @@ trait solarium {
 
 			/** @var \Solarium\QueryType\Select\Result\Result $result */
 			$result = $client->select( $query );
+			$this->debugger()->trace("result from select: " . print_r($result, true));
+
 			if ( $this->responseIsOK( $result ) ) {
 				$response = new SolariumResult( null, $result );
 			} else {
@@ -146,8 +141,19 @@ trait solarium {
 			return $response;
 
 		} catch ( \Exception $e ) {
+			$this->debugger()->error($e->getMessage());
+
 			throw new Exception( $e->getMessage(), $e->getCode(), $e );
 		}
+	}
+
+	/**
+	 * @param \Solarium\Core\Query\Result\Result $result
+	 *
+	 * @return bool
+	 */
+	public function responseIsOK( $result ) {
+		return fnmatch( '2*', $result->getResponse()->getStatusCode() );
 	}
 
 	/**

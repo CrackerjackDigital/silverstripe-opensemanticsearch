@@ -191,10 +191,20 @@ class SolariumResult extends Result implements ResultInterface {
 	}
 
 	/**
+	 * Return the count of items which can be returned, or 0 if none. Depending on implementation this
+	 * could be the total count, or the count available from start, or from start+limit.
+	 *
+	 * @return int
+	 */
+	public function count() {
+		return $this->result()->getNumFound();
+	}
+
+	/**
 	 * @return bool
 	 */
 	public function hasItems() {
-		return $this->result()->getNumFound() > 0;
+		return $this->count() > 0;
 	}
 
 	/**
@@ -224,13 +234,4 @@ class SolariumResult extends Result implements ResultInterface {
 		return $this->result()->getResponse()->getStatusCode();
 	}
 
-	/**
-	 * Return the count of items which can be returned, or 0 if none. Depending on implementation this
-	 * could be the total count, or the count available from start, or from start+limit.
-	 *
-	 * @return int
-	 */
-	public function count() {
-		// TODO: Implement count() method.
-	}
 }

@@ -1,9 +1,12 @@
 <?php
+use Modular\Interfaces\Debugger;
+use Modular\Traits\debugging;
 use OpenSemanticSearch\Interfaces\IndexInterface;
 use OpenSemanticSearch\Extensions\MetaDataExtension;
 use OpenSemanticSearch\Interfaces\SearchInterface;
 
 class OpenSemanticSearchTest extends FunctionalTest {
+	use debugging;
 
 	// this will be set to the path where test assets are copied
 	private $testAssetsDir;
@@ -22,6 +25,7 @@ class OpenSemanticSearchTest extends FunctionalTest {
 	 * Sets up the environment and services ready for testing.
 	 */
 	public function setUp() {
+		$this->debugger(Debugger::LevelFromEnv & Debugger::DebugScreen)->toFile(Debugger::DebugAll, __CLASS__);
 		$this->copyTestFiles();
 		parent::setUp();
 	}
@@ -60,7 +64,10 @@ class OpenSemanticSearchTest extends FunctionalTest {
 
 			$destPathName = Controller::join_links($this->testAssetsDir, $filePathName);
 
-			$this->testFilePaths[] = $destPathName;
+			$this->testFilePaths[] = substr(
+				$destPathName,
+				strlen(BASE_PATH) + 1
+			);
 
 			if (!is_file($destPathName)) {
 				// only copy if doesn't exist
@@ -82,47 +89,6 @@ class OpenSemanticSearchTest extends FunctionalTest {
 		Filesystem::removeFolder($this->testAssetsDir);
 		Filesystem::sync();
 		parent::tearDown();
-	}
-
-	/**
-	 * Return a configured instance of the service which supports searching
-	 *
-	 * @return SearchInterface
-	 */
-	protected function searchService() {
-		static $service;
-		if ( ! $service ) {
-			$service = \Injector::inst()->create( SearchInterface::ServiceName);
-		}
-
-		return $service;
-	}
-
-	/**
-	 * Return a configured instance of the service which adds/removes things from the Search index.
-	 * @return IndexInterface
-	 */
-	protected function indexingService() {
-		static $service;
-		if ( ! $service ) {
-			$service = \Injector::inst()->create( IndexInterface::ServiceName);
-		}
-
-		return $service;
-	}
-
-	/**
-	 * Return a configured instance of the service which supports retrieving structured information from the Search service
-	 * @return mixed
-	 */
-	protected function metaDataService() {
-		static $service;
-		if ( ! $service ) {
-			$service = \Injector::inst()->create( MetaDataInterface::ServiceName );
-		}
-
-		return $service;
-
 	}
 
 	public function testValidFileIsValid() {
@@ -148,7 +114,8 @@ class OpenSemanticSearchTest extends FunctionalTest {
 		);
 
 		$invalidFile = Controller::join_links(TEMP_FOLDER, basename( $this->testFilePaths[0]));
-		copy( $this->testFilePaths[0], $invalidFile);
+		$sourceFile = Controller::join_links( BASE_PATH, $this->testFilePaths[0] );
+		copy( $sourceFile, $invalidFile);
 		$this->assertEmpty(
 			$this->indexingService()->relativePath($invalidFile),
 			"That path to existing file outside of web root is invalid path"
@@ -197,10 +164,10 @@ class OpenSemanticSearchTest extends FunctionalTest {
 		$this->assertTrue($this->indexingService()->addDirectory($this->testAssetsDir), "That adding a directory works");
 		sleep(self::IndexWait);
 
-		$results = $this->searchService()->search('apache');
+		$results = $this->searchService()->search('apache')->models();
 		$this->assertDOSContains(array('Filename' => $this->testFilePaths[0]), $results);
 
-		$results = $this->searchService()->search([ 'content' => 'passport']);
+		$results = $this->searchService()->search([ 'content' => 'passport'])->models();
 		$this->assertDOSContains(array('Filename' => $this->testFilePaths[1]), $results);
 	}
 
@@ -231,4 +198,48 @@ class OpenSemanticSearchTest extends FunctionalTest {
 	protected function assertNotFound($fileList, $message = "Document was not found in index") {
 		$this->assertTrue($fileList->count() === 0, $message);
 	}
+
+	/**
+	 * Return a configured instance of the service which supports searching
+	 *
+	 * @return SearchInterface
+	 */
+	protected function searchService() {
+		static $service;
+		if ( ! $service ) {
+			$service = \Injector::inst()->create( SearchInterface::ServiceName );
+		}
+
+		return $service;
+	}
+
+	/**
+	 * Return a configured instance of the service which adds/removes things from the Search index.
+	 *
+	 * @return IndexInterface
+	 */
+	protected function indexingService() {
+		static $service;
+		if ( ! $service ) {
+			$service = \Injector::inst()->create( IndexInterface::ServiceName );
+		}
+
+		return $service;
+	}
+
+	/**
+	 * Return a configured instance of the service which supports retrieving structured information from the Search service
+	 *
+	 * @return mixed
+	 */
+	protected function metaDataService() {
+		static $service;
+		if ( ! $service ) {
+			$service = \Injector::inst()->create( SearchInterface::ServiceName );
+		}
+
+		return $service;
+
+	}
+
 }

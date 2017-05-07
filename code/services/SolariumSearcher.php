@@ -28,11 +28,6 @@ class SolariumSearcher extends SolrSearcher {
 	/** @ var int|null how many results per search, null = unlimited */
 	private static $limit = null;
 
-	protected function decodeResponse( $service, $endpoint = '', $responseBody) {
-		if ($responseBody && $this->responseIsOK( $responseBody)) {
-
-		}
-	}
 
 		/**
 	 * @param string $type          e.g. 'client', 'query' etc maps to config

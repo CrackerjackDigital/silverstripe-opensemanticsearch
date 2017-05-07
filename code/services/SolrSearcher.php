@@ -2,6 +2,7 @@
 
 namespace OpenSemanticSearch\Services;
 
+use File;
 use OpenSemanticSearch\Interfaces\OSSID;
 use OpenSemanticSearch\Interfaces\SearchInterface;
 use OpenSemanticSearch\Models\IndexedURL;
@@ -14,38 +15,42 @@ abstract class SolrSearcher extends Service implements SearchInterface {
 	/**
 	 * Find a specific indexed document by id (path)
 	 *
-	 * @param mixed|\File $fileOrID
+	 * @param mixed|\File $fileOrIDOrPath
 	 *
 	 * @return mixed
 	 * @throws \InvalidArgumentException
 	 *
 	 */
-	public function findFile( $fileOrID ) {
-		if ( $fileOrID && is_int( $fileOrID ) ) {
-			$file = SiteTree::get()->byID( $fileOrID );
-		} elseif ( $fileOrID instanceof \File ) {
-			$file = $fileOrID;
+	public function findFile( $fileOrIDOrPath ) {
+		if ( $fileOrIDOrPath && is_int( $fileOrIDOrPath ) ) {
+			$file = SiteTree::get()->byID( $fileOrIDOrPath );
+		} elseif ( $fileOrIDOrPath instanceof File ) {
+			$file = $fileOrIDOrPath;
+		} elseif ( $fileOrIDOrPath ) {
+			$file = File::get()->filter( [ 'Filename' => $fileOrIDOrPath ] )->first();
 		} else {
-			throw new \InvalidArgumentException( 'fileOrID' );
+			throw new \InvalidArgumentException( 'Invalid fileOrID' );
 		}
 
 		return $this->find( $file );
 	}
 
 	/**
-	 * @param mixed|\SiteTree $pageOrID
+	 * @param mixed|\SiteTree $pageOrIDPath
 	 *
 	 * @return mixed
 	 * @throws \InvalidArgumentException
 	 * @throws \OpenSemanticSearch\Exceptions\SearchException
 	 */
-	public function findPage( $pageOrID ) {
-		if ( $pageOrID && is_int( $pageOrID ) ) {
-			$page = SiteTree::get()->byID( $pageOrID );
-		} elseif ( $pageOrID instanceof SiteTree ) {
-			$page = $pageOrID;
+	public function findPage( $pageOrIDPath ) {
+		if ( $pageOrIDPath && is_int( $pageOrIDPath ) ) {
+			$page = SiteTree::get()->byID( $pageOrIDPath );
+		} elseif ( $pageOrIDPath instanceof SiteTree ) {
+			$page = $pageOrIDPath;
+		} elseif ( $pageOrIDPath ) {
+			$page = SiteTree::get_by_link( $pageOrIDPath )->first();
 		} else {
-			throw new \InvalidArgumentException( 'fileOrID' );
+			throw new \InvalidArgumentException( 'Invalid pageOrIDPath' );
 		}
 
 		return $this->find( $page );
@@ -73,7 +78,7 @@ abstract class SolrSearcher extends Service implements SearchInterface {
 			] );
 
 		} else {
-			throw new \InvalidArgumentException( 'fileOrID' );
+			throw new \InvalidArgumentException( 'Invalid ossidOrIndexedURL' );
 		}
 
 		return $this->find( $model );
