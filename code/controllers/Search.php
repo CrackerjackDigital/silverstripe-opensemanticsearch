@@ -2,10 +2,10 @@
 
 namespace OpenSemanticSearch\Controllers;
 
-use Modular\Exceptions\Exception;
+use Member;
 use OpenSemanticSearch\Interfaces\SearchInterface;
 
-class OSSController extends \ContentController {
+class Search extends \ContentController {
 	private static $allowed_actions = [
 		'search' => '->canSearch',
 	];
@@ -19,11 +19,18 @@ class OSSController extends \ContentController {
 		'Page'   => 'Page',
 	];
 
+	private static $require_login = false;
+
 	public function canSearch() {
 		return true;
 	}
 
 	public function search( \SS_HTTPRequest $request ) {
+		if (!Member::currentUserID() && static::require_login()) {
+			return $this->redirect(
+				'/Security/login?BackURL=/' . $request->getURL(true)
+			);
+		}
 		if ( $request->isPOST() ) {
 			$terms = $request->postVar( 'q' );
 		} else {
@@ -54,5 +61,9 @@ class OSSController extends \ContentController {
 				'Message' => $message,
 			] )
 		);
+	}
+
+	public static function require_login() {
+		return static::config()->get('require_login');
 	}
 }
