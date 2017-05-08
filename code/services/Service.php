@@ -30,9 +30,6 @@ abstract class Service extends \Object implements ServiceInterface {
 	// tokens in uris end with this
 	private static $token_end = '}';
 
-	// what configuration to use
-	private static $environment = SS_ENVIRONMENT_TYPE;
-
 	// override to supply name of Injector service or class to use for this service.
 	private static $service_name = '';
 
@@ -151,14 +148,14 @@ abstract class Service extends \Object implements ServiceInterface {
 	}
 
 	/**
-	 * Returns the configured environment, by default this with be config.environment, otherwise whatever is passed in e.g. 'dev', 'test', 'live'
+	 * Returns whatever is passed, or default to SS_ENVIRONMENT_TYPE if parameter is empty. Makes sure we always have something sensible.
 	 *
-	 * @param $env
+	 * @param string $env
 	 *
 	 * @return string
 	 */
-	protected static function env( $env = '' ) {
-		return $env ? $env : static::config()->get( 'environment' );
+	protected static function env( $env = SS_ENVIRONMENT_TYPE ) {
+		return $env ?: SS_ENVIRONMENT_TYPE;
 	}
 
 	/**

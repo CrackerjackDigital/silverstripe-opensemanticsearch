@@ -212,8 +212,9 @@ trait http {
 	 * @return String
 	 */
 	protected function uri( $service, $endpoint, $params = [], $tokens = [], $encode = HTTPInterface::QueryStringEncode ) {
-		$uri = $this->option( $this->option( $this->option( 'endpoints' ), $service ), $endpoint );
-//		$encode = $this->option( $this->option( $this->option( 'endpoints' ), $service ), 'encode' );
+		if (!$uri = $this->option( $this->option( $this->option( 'endpoints' ), $service ), $endpoint )) {
+			throw new Exception("No uri configured for environment '$this->env'");
+		}
 
 		// add default tokens
 		$tokens = array_merge(
