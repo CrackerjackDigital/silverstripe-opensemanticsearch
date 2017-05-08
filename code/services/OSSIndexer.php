@@ -245,7 +245,7 @@ class OSSIndexer extends IndexService {
 			throw new Exception( "Don't know what to do with parameter 'pageOrID', it's not one of those" );
 		}
 
-		return $this->addURL( $page->Link() );
+		return $this->addURL( $page->AbsoluteLink() );
 	}
 
 	/**
@@ -269,7 +269,7 @@ class OSSIndexer extends IndexService {
 			self::ServiceOSS,
 			self::EndpointRemove,
 			[
-				'uri' => $page->Link(),
+				'uri' => $page->AbsoluteLink(),
 			]
 		)->isOK();
 	}
@@ -277,17 +277,17 @@ class OSSIndexer extends IndexService {
 	/**
 	 * Add a url to the index, no further checks are made e.g. to check the url is one from this site but it is indexed verbatim.
 	 *
-	 * @param $url
+	 * @param string $absoluteURL including protocol, host etc
 	 *
 	 * @return bool
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
-	public function addURL( $url ) {
+	public function addURL( $absoluteURL ) {
 		return $this->request(
 			self::ServiceOSS,
 			self::EndpointIndexURL,
 			[
-				'uri' => $url,
+				'uri' => $absoluteURL,
 			]
 		)->isOK();
 	}
@@ -295,17 +295,17 @@ class OSSIndexer extends IndexService {
 	/**
 	 * Remove an index entry by url
 	 *
-	 * @param string $url
+	 * @param string $absoluteURL including protocol, host etc
 	 *
 	 * @return mixed
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
-	public function removeURL( $url ) {
+	public function removeURL( $absoluteURL ) {
 		return $this->request(
 			self::ServiceOSS,
 			self::EndpointRemove,
 			[
-				'uri' => $url,
+				'uri' => $absoluteURL,
 			]
 		)->isOK();
 	}
