@@ -162,6 +162,7 @@ trait solarium {
 	 * @param string $uri if not supplied then the uri for the Solr Search config option will be used.
 	 *
 	 * @return \Solarium\Core\Client\Endpoint
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
 	public function endpoint( $uri = null ) {
 		$uri = $uri ?: $this->uri( self::ServiceSolr, self::EndpointSearch );
@@ -187,6 +188,7 @@ trait solarium {
 	 * @param mixed $options
 	 *
 	 * @return \Solarium\Core\Client\Client
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 * @throws \Solarium\Exception\InvalidArgumentException
 	 * @throws \Solarium\Exception\OutOfBoundsException
 	 */

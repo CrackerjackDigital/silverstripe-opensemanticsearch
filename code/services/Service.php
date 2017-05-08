@@ -5,6 +5,7 @@ namespace OpenSemanticSearch\Services;
 use Controller;
 use Modular\Interfaces\HTTP as HTTPInterface;
 use Modular\Traits\debugging;
+use OpenSemanticSearch\Exceptions\Exception;
 use OpenSemanticSearch\Interfaces\ServiceInterface;
 use OpenSemanticSearch\Traits\http;
 
@@ -131,9 +132,13 @@ abstract class Service extends \Object implements ServiceInterface {
 	 * Returns the core name for the current SS environment
 	 *
 	 * @return string e.g. 'core1'
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
 	public function core() {
-		return $this->option( 'core' );
+		if (!$core = $this->option( 'core' )) {
+			throw new Exception("No core configured for environment '$this->env'");
+		}
+		return $core;
 	}
 
 	/**
@@ -168,11 +173,9 @@ abstract class Service extends \Object implements ServiceInterface {
 	 */
 	public function relativePath( $path ) {
 		if ( substr( $path, 0, 1 ) == DIRECTORY_SEPARATOR ) {
-			// we start with '/'
 			if ( substr( $path, 0, strlen( BASE_PATH ) ) == BASE_PATH ) {
 				// trim off the base path
 				$path = substr( $path, strlen( BASE_PATH ) );
-
 			} else {
 				// not under base path, try adding the base path at the start, realpath should fail if we're somewhere bad
 				$absPath = Controller::join_links( BASE_PATH, $path );

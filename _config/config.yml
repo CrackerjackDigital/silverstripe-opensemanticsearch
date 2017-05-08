@@ -61,7 +61,7 @@ OpenSemanticSearch\Services\Service:
     dev:
       '/assets/': '/mount/files/assets/'
   core:
-    dev: 'core1'
+    '*': 'core1'
 OpenSemanticSearch\Services\OSSIndexer:
   context_options:
     dev:

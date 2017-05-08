@@ -207,9 +207,10 @@ trait http {
 	 * @param array|\ArrayAccess $params   encoded as query string, values are expected already to be url encoded correctly
 	 * @param array              $tokens   additional to replace in uri
 	 *
-	 * @param bool               $encode
+	 * @param bool|string        $encode
 	 *
 	 * @return String
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
 	protected function uri( $service, $endpoint, $params = [], $tokens = [], $encode = HTTPInterface::QueryStringEncode ) {
 		if (!$uri = $this->option( $this->option( $this->option( 'endpoints' ), $service ), $endpoint )) {
