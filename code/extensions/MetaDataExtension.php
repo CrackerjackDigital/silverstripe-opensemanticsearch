@@ -72,18 +72,30 @@ class MetaDataExtension extends ModelExtension {
 		],
 	];
 
+	/**
+	 * If we've added the OSSAuthors relationship to the extended model then add authors from
+	 * solr results to it, creating if they don't exist.
+	 *
+	 * @param array $authors
+	 *
+	 * @throws \InvalidArgumentException
+	 * @throws \ValidationException
+	 */
 	public function mapOSSAuthors( array $authors ) {
-		$existing = DocumentAuthor::get()->filter( [
-			'Title' => $authors,
-		] );
-		foreach ( $authors as $author ) {
-			if ( ! $model = $existing->find( 'Title', $author ) ) {
-				$model = new DocumentAuthor( [
-					'Title' => $author,
-				] );
-				$model->write();
+		if ($this->model()->hasMethod(self::AuthorField)) {
+			$existing = DocumentAuthor::get()->filter( [
+				'Title' => $authors,
+			] );
+			foreach ( $authors as $title ) {
+				if ( ! $author = $existing->find( 'Title', $title ) ) {
+					$author = new DocumentAuthor( [
+						'Title' => $title,
+					] );
+					$author->write();
+				}
+				$this->model()->OSSAuthors()->add( $author );
 			}
-			$this->model()->OSSAuthors()->add( $model );
+
 		}
 	}
 
