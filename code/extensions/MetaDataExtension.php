@@ -4,14 +4,19 @@ namespace OpenSemanticSearch\Extensions;
 
 use ArrayData;
 use ArrayList;
+use DataObject;
 use DocumentAuthor;
 use FieldList;
+use File;
 use Modular\Fields\DateTimeField;
 use Modular\Interfaces\Mappable;
+use Modular\Interfaces\Mappable as Mappableinterface;
 use Modular\Traits\bitfield;
 use Modular\Traits\mappable_map_map;
 use Modular\Traits\mappable_mapper;
 use Modular\Traits\mappable_model;
+use OpenSemanticSearch\Models\IndexedURL;
+use Page;
 use ReadonlyField;
 use SS_List;
 
@@ -20,9 +25,9 @@ use SS_List;
  *
  * @package OpenSemanticSearch
  * @property string $OSSID
- * @property string $OSSAuthor
  * @property string $OSSPath
  * @property string $OSSRetrievedDate
+ * @method SS_List OSSAuthors()
  */
 class MetaDataExtension extends ModelExtension {
 	use bitfield,
@@ -67,6 +72,31 @@ class MetaDataExtension extends ModelExtension {
 		],
 	];
 
+	public function mapOSSAuthors( array $authors ) {
+		$existing = DocumentAuthor::get()->filter( [
+			'Title' => $authors,
+		] );
+		foreach ( $authors as $author ) {
+			if ( ! $model = $existing->find( 'Title', $author ) ) {
+				$model = new DocumentAuthor( [
+					'Title' => $author,
+				] );
+				$model->write();
+			}
+			$this->model()->OSSAuthors()->add( $model );
+		}
+	}
+
+	/**
+	 * Called by traits, if exhibited on an extension this should return the owner, if exhibited
+	 * on a model this should return the model itself. Also usefull for type hinting inside this extension.
+	 *
+	 * @return $this|File|Page|IndexedURL|MappableInterface
+	 */
+	public function model() {
+		return $this->owner;
+	}
+
 	/**
 	 * @param \FieldList $fields
 	 *
@@ -95,15 +125,6 @@ class MetaDataExtension extends ModelExtension {
 		}
 	}
 
-	/**
-	 * Called by traits, if exhibited on an extension this should return the owner, if exhibited
-	 * on a model this should return the model itself.
-	 *
-	 * @return \DataObject|\Modular\Interfaces\Mappable
-	 */
-	public function model() {
-		return $this->owner;
-	}
 
 	/**
 	 * Returns OSS MetaData as an ArrayObject or a single value if passed.
