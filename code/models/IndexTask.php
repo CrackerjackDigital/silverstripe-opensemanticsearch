@@ -41,6 +41,7 @@ class IndexTask extends QueuedTask {
 	private static $unique_fields = [
 		\Modular\Fields\Title::Name                  => false,
 		\OpenSemanticSearch\Fields\IndexedItem::Name => true,
+		\OpenSemanticSearch\Fields\SourceQuery::Name => true,
 		\OpenSemanticSearch\Fields\IndexAction::Name => true,
 	];
 

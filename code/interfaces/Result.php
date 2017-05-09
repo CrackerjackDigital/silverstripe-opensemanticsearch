@@ -1,4 +1,5 @@
 <?php
+
 namespace OpenSemanticSearch\Interfaces;
 
 interface ResultInterface {
@@ -6,9 +7,15 @@ interface ResultInterface {
 	/**
 	 * Return a list of models form the response.
 	 *
+	 * @param bool  $updateMetaData if true the update the models which are returned
+	 *                              with meta data from the search result. Doesn't write the
+	 *                              meta data changes though.
+	 *
+	 * @param mixed $include        what models to include in the results
+	 *
 	 * @return \SS_List
 	 */
-	public function models();
+	public function models( $updateMetaData = false, $include = ServiceInterface::IncludeAll );
 
 	/**
 	 * Return the items from the response, e.g. may not be the response itself but a nested array.
@@ -47,6 +54,7 @@ interface ResultInterface {
 
 	/**
 	 * Return a code (e.g. an http response may be 200 for OK, or 403 for forbidden).
+	 *
 	 * @return mixed
 	 */
 	public function resultCode();

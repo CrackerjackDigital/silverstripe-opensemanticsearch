@@ -19,8 +19,6 @@ class MetaDataService extends Service implements MetaDataInterface {
 	use json;
 	use http;
 
-	const ServiceName = 'MetaDataService';
-
 	/** @var  \OpenSemanticSearch\Interfaces\SearchInterface set via Injector on construct to a suitable search service e.g. %SearchService */
 	private $searcher;
 

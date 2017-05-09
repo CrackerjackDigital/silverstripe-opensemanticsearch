@@ -26,9 +26,9 @@ class Search extends \ContentController {
 	}
 
 	public function search( \SS_HTTPRequest $request ) {
-		if (!Member::currentUserID() && static::require_login()) {
+		if ( ! Member::currentUserID() && static::require_login() ) {
 			return $this->redirect(
-				'/Security/login?BackURL=/' . $request->getURL(true)
+				'/Security/login?BackURL=/' . $request->getURL( true )
 			);
 		}
 		if ( $request->isPOST() ) {
@@ -47,7 +47,7 @@ class Search extends \ContentController {
 				$service = \Injector::inst()->get( SearchInterface::ServiceName );
 
 				if ( $result = $service->search( $terms ) ) {
-					$results = new \PaginatedList( $result->models() );
+					$results = new \PaginatedList( $result->models( true ), $request );
 				}
 			} catch ( \Exception $e ) {
 				$message = 'Sorry, there was a problem with your request, please try again later';
@@ -59,11 +59,12 @@ class Search extends \ContentController {
 			new \ArrayData( [
 				'Results' => $results,
 				'Message' => $message,
+				'Query'   => $terms,
 			] )
 		);
 	}
 
 	public static function require_login() {
-		return static::config()->get('require_login');
+		return static::config()->get( 'require_login' );
 	}
 }

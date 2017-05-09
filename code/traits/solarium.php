@@ -2,6 +2,7 @@
 
 namespace OpenSemanticSearch\Traits;
 
+use DataObject;
 use OpenSemanticSearch\Exceptions\Exception;
 use OpenSemanticSearch\Interfaces\OSSID;
 use OpenSemanticSearch\Results\ErrorResult;
@@ -19,17 +20,19 @@ trait solarium {
 	protected $endpoint;
 
 	/**
+	 * Return a list of models based on a provided item,
+	 *
 	 * @param OSSID $item e.g. the remote file path should not be escaped yet. This shouldn't be url encoded, but should have 'file://' scheme prefixed.
+	 * @param bool  $updateMetaData from the search result if true, doesn't write the model.
 	 * @param array $options
 	 *
-	 * @return \OpenSemanticSearch\Results\Result
+	 * @return \DataObject
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
 	public function find(
 		$item,
-		$options = [
-			'resultclass' => SolariumResult::class,
-		]
+		$updateMetaData = true,
+		$options = [ 'resultclass' => SolariumResult::class ]
 	) {
 		try {
 			$client = $this->createClient( $options );
@@ -45,12 +48,20 @@ trait solarium {
 			$result = $client->realtimeGet( $query );
 
 			if ( $this->responseIsOK( $result ) ) {
-				$response = new SolariumResult( null, $result );
+				$response = new SolariumResult(
+					$result->getResponse()->getStatusCode(),
+					$result,
+					$result->getResponse()->getStatusMessage()
+				);
 			} else {
-				$response = new ErrorResult( $result->getResponse()->getStatusCode(), $result->getData(), $result->getResponse()->getStatusMessage() );
+				$response = new ErrorResult(
+					$result->getResponse()->getStatusCode(),
+					$result->getData(),
+					$result->getResponse()->getStatusMessage()
+				);
 			}
 
-			return $response;
+			return $response->models($updateMetaData)->first();
 
 		} catch ( \Exception $e ) {
 			throw new Exception( $e->getMessage(), $e->getCode(), $e );
@@ -81,19 +92,19 @@ trait solarium {
 		],
 		$facets = [],
 		$options = [
-			'view'        => self::ViewList,
-			'start'       => 0,
-			'limit'       => null,                    // null means use configured default
-			'stemming'    => self::Stemming,
-			'operator'    => self::OperatorOR,
-			'synonyms'    => 1,
+			'view'     => self::ViewList,
+			'start'    => 0,
+			'limit'    => null,                    // null means use configured default
+			'stemming' => self::Stemming,
+			'operator' => self::OperatorOR,
+			'synonyms' => 1,
 			// 'resultclass' => SolariumResult::class,
 			//  'sort'     => [ self::SortRelevance ],
 		],
 		$include = self::IncludeAll
 	) {
 		try {
-			$this->debugger()->trace("Searching for '$fullText'");
+			$this->debugger()->trace( "Searching for '$fullText'" );
 
 			$client = $this->createClient( $options );
 
@@ -126,7 +137,7 @@ trait solarium {
 
 			/** @var \Solarium\QueryType\Select\Result\Result $result */
 			$result = $client->select( $query );
-			$this->debugger()->trace("result from select: " . print_r($result, true));
+			$this->debugger()->trace( "result from select: " . print_r( $result, true ) );
 
 			if ( $this->responseIsOK( $result ) ) {
 				$response = new SolariumResult( null, $result );
@@ -141,7 +152,7 @@ trait solarium {
 			return $response;
 
 		} catch ( \Exception $e ) {
-			$this->debugger()->error($e->getMessage());
+			$this->debugger()->error( $e->getMessage() );
 
 			throw new Exception( $e->getMessage(), $e->getCode(), $e );
 		}

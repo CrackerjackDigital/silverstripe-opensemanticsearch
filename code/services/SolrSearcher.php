@@ -2,10 +2,13 @@
 
 namespace OpenSemanticSearch\Services;
 
+use DataObject;
 use File;
+use InvalidArgumentException;
 use OpenSemanticSearch\Interfaces\OSSID;
 use OpenSemanticSearch\Interfaces\SearchInterface;
 use OpenSemanticSearch\Models\IndexedURL;
+use Page;
 use SiteTree;
 
 abstract class SolrSearcher extends Service implements SearchInterface {
@@ -13,17 +16,18 @@ abstract class SolrSearcher extends Service implements SearchInterface {
 	const EndpointSearch = 'search';
 
 	/**
-	 * Find a specific indexed document by id (path)
+	 * Find a single specific indexed File
 	 *
-	 * @param mixed|\File $fileOrIDOrPath
+	 * @param mixed|File $fileOrIDOrPath
 	 *
-	 * @return mixed
+	 * @param bool       $updateMetaData on the found model, doesn't write it
+	 *
+	 * @return File|DataObject|null
 	 * @throws \InvalidArgumentException
-	 *
 	 */
-	public function findFile( $fileOrIDOrPath ) {
+	public function findFile( $fileOrIDOrPath, $updateMetaData = true ) {
 		if ( $fileOrIDOrPath && is_int( $fileOrIDOrPath ) ) {
-			$file = SiteTree::get()->byID( $fileOrIDOrPath );
+			$file = File::get()->byID( $fileOrIDOrPath );
 		} elseif ( $fileOrIDOrPath instanceof File ) {
 			$file = $fileOrIDOrPath;
 		} elseif ( $fileOrIDOrPath ) {
@@ -32,17 +36,20 @@ abstract class SolrSearcher extends Service implements SearchInterface {
 			throw new \InvalidArgumentException( 'Invalid fileOrID' );
 		}
 
-		return $this->find( $file );
+		return $this->find( $file, $updateMetaData );
 	}
 
 	/**
+	 * Find a single specific indexed page
+	 *
 	 * @param mixed|\SiteTree $pageOrIDPath
 	 *
-	 * @return mixed
-	 * @throws \InvalidArgumentException
-	 * @throws \OpenSemanticSearch\Exceptions\SearchException
+	 * @param bool $updateMetaData on the found model, doesn't write it
+	 *
+	 * @return null|Page|DataObject
+	 * @throws InvalidArgumentException
 	 */
-	public function findPage( $pageOrIDPath ) {
+	public function findPage( $pageOrIDPath, $updateMetaData = true ) {
 		if ( $pageOrIDPath && is_int( $pageOrIDPath ) ) {
 			$page = SiteTree::get()->byID( $pageOrIDPath );
 		} elseif ( $pageOrIDPath instanceof SiteTree ) {
@@ -53,16 +60,18 @@ abstract class SolrSearcher extends Service implements SearchInterface {
 			throw new \InvalidArgumentException( 'Invalid pageOrIDPath' );
 		}
 
-		return $this->find( $page );
+		return $this->find( $page, $updateMetaData );
 	}
 
 	/**
+	 * Find a single specific indexed url
+	 *
 	 * @param int|string|OSSID $ossidOrIndexedURL
 	 *
-	 * @return mixed
-	 * @throws \InvalidArgumentException
+	 * @return OSSID|IndexedURL|DataObject
+	 * @throws InvalidArgumentException
 	 */
-	public function findURL( $ossidOrIndexedURL ) {
+	public function findURL( $ossidOrIndexedURL, $updateMetaData = true ) {
 		if ( $ossidOrIndexedURL instanceof OSSID ) {
 
 			$model = $ossidOrIndexedURL;
@@ -81,7 +90,7 @@ abstract class SolrSearcher extends Service implements SearchInterface {
 			throw new \InvalidArgumentException( 'Invalid ossidOrIndexedURL' );
 		}
 
-		return $this->find( $model );
+		return $this->find( $model, $updateMetaData );
 	}
 
 }

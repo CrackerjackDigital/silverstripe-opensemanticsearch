@@ -2,13 +2,15 @@
 
 namespace OpenSemanticSearch\Models;
 
-use Modular\Models\QueuedServiceTask;
+use ArrayList;
+use InvalidArgumentException;
 use Modular\Models\QueuedTask;
 use OpenSemanticSearch\Exceptions\Exception;
 use OpenSemanticSearch\Extensions\MetaDataExtension;
 use OpenSemanticSearch\Fields\IndexedItem;
+use OpenSemanticSearch\Fields\SourceQuery;
 use OpenSemanticSearch\Interfaces\MetaDataInterface;
-use OpenSemanticSearch\Services\MetaDataService;
+use SS_List;
 
 /**
  * Scan through a file or files and update fields in the CMS with information from Solr, such as facets etc. Filters can be specified in
@@ -36,16 +38,33 @@ class MetaDataTask extends QueuedTask {
 	 * @param array|\ArrayAccess $params
 	 * @param string             $resultMessage
 	 *
-	 * @return bool true if executed succesfully, false otherwise (and should have set $resultMessage with reason)
-	 * @throws \InvalidArgumentException
-	 * @throws \Modular\Exceptions\Exception
+	 * @return int count of items found and updated
+	 * @throws InvalidArgumentException
+	 * @throws Exception
 	 */
 	public function execute( $params = [], &$resultMessage = '' ) {
-		if ($item = $this->{IndexedItem::relationship_name()}()) {
-			return count($this->service->populateMetaData( $item));
-		}
-		return false;
-	}
+		$items = new ArrayList( [] );
+		if ( $query = $this->{SourceQuery::Name} ) {
 
+			$items = $this->service->search( $query )->models( true );
+
+		} elseif ( $item = $this->{IndexedItem::relationship_name()}() ) {
+
+			$items = [ $this->service->find( $item, true ) ];
+
+		}
+		if ($retrievedBeforeDate = $this->{MetaDataExtension::RetrievedDateField}) {
+			$items = $items->filter([
+				MetaDataExtension::RetrievedDateField . ':LessThan' => $retrievedBeforeDate
+			]);
+		}
+		// now write items as the search/find may update their meta data but
+		// doesn't save them.
+		foreach ( $items as $item ) {
+			$item->write();
+		}
+
+		return count( $items );
+	}
 
 }

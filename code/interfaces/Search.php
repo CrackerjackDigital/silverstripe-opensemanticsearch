@@ -1,5 +1,8 @@
 <?php
+
 namespace OpenSemanticSearch\Interfaces;
+
+use OpenSemanticSearch\Models\IndexedURL;
 
 interface SearchInterface extends PathMappingInterface, ServiceInterface {
 	const ServiceName       = 'SearchService';
@@ -9,12 +12,12 @@ interface SearchInterface extends PathMappingInterface, ServiceInterface {
 	/**
 	 * Return a single model by it's OSS ID
 	 *
-	 * @param $model
+	 * @param OSSID|int|string $modelOrIDOrPath
+	 * @param bool             $updateMetaData from the search result if true, doesn't write the model.
 	 *
 	 * @return \DataObject
-	 *
 	 */
-	public function find($model);
+	public function find( $modelOrIDOrPath, $updateMetaData = true );
 
 	/**
 	 * Returns a single match given a path, or null if not match found
@@ -36,9 +39,10 @@ interface SearchInterface extends PathMappingInterface, ServiceInterface {
 
 	/**
 	 * Return a single match by URL
+	 *
 	 * @param $url
 	 *
-	 * @return mixed
+	 * @return IndexedURL|OSSID
 	 */
 	public function findURL( $url );
 

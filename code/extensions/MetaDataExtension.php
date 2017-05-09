@@ -2,14 +2,18 @@
 
 namespace OpenSemanticSearch\Extensions;
 
+use ArrayData;
+use ArrayList;
+use DocumentAuthor;
 use FieldList;
 use Modular\Fields\DateTimeField;
-use Modular\Forms\TabField;
 use Modular\Interfaces\Mappable;
 use Modular\Traits\bitfield;
 use Modular\Traits\mappable_map_map;
 use Modular\Traits\mappable_mapper;
 use Modular\Traits\mappable_model;
+use ReadonlyField;
+use SS_List;
 
 /**
  * Adds the meta data that OSS extracts or can return to models (generally files)
@@ -26,14 +30,26 @@ class MetaDataExtension extends ModelExtension {
 		mappable_mapper,
 		mappable_map_map;
 
-	const AuthorField        = 'OSSAuthor';          // field for authors
-	const PathField          = 'OSSPath';            // path on service (e.g Solr)
-	const RetrievedDateField = 'OSSRetrievedDate';   // date meta data was last updated for this file
+	const OSSIDField = 'OSSID';
+	const TitleField = 'OSSTitle';
+
+	// field or relationship for authors, this should be added in an applicaiton extension as a many_may
+	// relating to the correct application-specific model if there is one.
+	const AuthorField = 'OSSAuthors';
+
+	// date meta data was last updated for this file
+	const RetrievedDateField = 'OSSRetrievedDate';
+	const ContentTypeField   = 'OSSContentType';
+	const ContentField       = 'OSSContent';
+	const LastModifiedField  = 'OSSLastModified';
 
 	private static $db = [
-		self::AuthorField        => 'Text',
-		self::PathField          => 'Text',
+		self::OSSIDField         => 'Text',
+		self::ContentTypeField   => 'Varchar(32)',
+		self::ContentField       => 'Text',
+		self::TitleField         => 'Text',
 		self::RetrievedDateField => 'SS_DateTime',
+		self::LastModifiedField  => 'SS_DateTime',
 	];
 	/**
 	 * Map from solr result via solarium client to this extensions fields
@@ -42,7 +58,12 @@ class MetaDataExtension extends ModelExtension {
 	 */
 	private static $mappable_map = [
 		'solarium' => [
-			'author[]' => 'updateOSSAuthors()',
+			'title.0'          => \OpenSemanticSearch\Extensions\MetaDataExtension::TitleField,
+			'author[]'         => \OpenSemanticSearch\Extensions\MetaDataExtension::AuthorField,
+			'content_type.0'   => \OpenSemanticSearch\Extensions\MetaDataExtension::ContentTypeField,
+			'id'               => \OpenSemanticSearch\Extensions\MetaDataExtension::OSSIDField,
+			'content'          => \OpenSemanticSearch\Extensions\MetaDataExtension::ContentField,
+			'file_modified_dt' => \OpenSemanticSearch\Extensions\MetaDataExtension::LastModifiedField,
 		],
 	];
 
@@ -52,16 +73,25 @@ class MetaDataExtension extends ModelExtension {
 	 * @return array
 	 *
 	 */
-	public function updateCMSFields(FieldList $fields) {
-		if ($fields->hasTabSet()) {
+	public function updateCMSFields( FieldList $fields ) {
+		if ( $fields->hasTabSet() ) {
 			$fields->addFieldsToTab(
 				'Root.SearchIndexFields',
 				[
-					new \ReadonlyField( self::AuthorField ),
-					new \ReadonlyField( self::PathField ),
-					new \ReadonlyField( self::RetrievedDateField ),
+					new ReadonlyField( self::OSSIDField ),
+					new ReadonlyField( self::TitleField ),
+					new ReadonlyField( self::ContentTypeField ),
+					new ReadonlyField( self::ContentField ),
+					new ReadonlyField( self::LastModifiedField ) .
+					new ReadonlyField( self::RetrievedDateField ),
 				]
 			);
+			if ( $this->model()->hasMethod( self::AuthorField ) ) {
+				$fields->addFieldToTab(
+					'Root.SearchIndexFields',
+					new ReadonlyField( self::AuthorField )
+				);
+			}
 		}
 	}
 
@@ -75,14 +105,36 @@ class MetaDataExtension extends ModelExtension {
 		return $this->owner;
 	}
 
-	public function updateOSSAuthors($data) {
-		if (!$this()->Authors()->count()) {
+	/**
+	 * Returns OSS MetaData as an ArrayObject or a single value if passed.
+	 *
+	 * @param string $what optional parameter just return a single value
+	 *
+	 * @return ArrayData|SS_List|string
+	 */
+	public function getOSSMetaData( $what = '' ) {
+		$model    = $this->model();
+		$metaData = [
+			'ID'            => $model->{self::OSSIDField},
+			'Title'         => $model->{self::TitleField},
+			'RetrievedDate' => $model->{self::RetrievedDateField},
+			'ContentType'   => $model->{self::ContentTypeField},
+			'Content'       => $model->{self::ContentField},
+			'LastModified'  => $model->{self::LastModifiedField},
+		];
+		if ( $model->hasMethod( self::AuthorField ) ) {
+			// add authors if the model has these related
+			$metaData['Authors'] = $model->{self::AuthorField}();
 
 		}
+
+		return $what ? $metaData[ $what ] : new ArrayData( $metaData );
 	}
 
 	/**
 	 * Update the model mapping incoming fields to the model fields.
+	 *
+	 * THIS DOESN'T WRITE THE MODEL, JUST SETS THE FIELDS.
 	 *
 	 * @param string $source key used to look up a suitable map in config.quaff_map
 	 * @param array  $data
@@ -99,7 +151,6 @@ class MetaDataExtension extends ModelExtension {
 		$model->update( [
 			self::RetrievedDateField => DateTimeField::now(),
 		] );
-		$model->write();
 
 		return $this;
 	}
