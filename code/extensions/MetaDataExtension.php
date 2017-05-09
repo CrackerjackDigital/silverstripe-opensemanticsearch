@@ -78,14 +78,22 @@ class MetaDataExtension extends ModelExtension {
 	 *
 	 * @param array $authors
 	 *
+	 * @return bool
 	 * @throws \InvalidArgumentException
 	 * @throws \ValidationException
 	 */
 	public function mapOSSAuthors( array $authors ) {
+		$mapped = false;
 		if ($this->model()->hasMethod(self::AuthorField)) {
+			$authors = array_filter(
+				$authors,
+				'trim'
+			);
+
 			$existing = DocumentAuthor::get()->filter( [
 				'Title' => $authors,
 			] );
+
 			foreach ( $authors as $title ) {
 				if ( ! $author = $existing->find( 'Title', $title ) ) {
 					$author = new DocumentAuthor( [
@@ -93,10 +101,27 @@ class MetaDataExtension extends ModelExtension {
 					] );
 					$author->write();
 				}
-				$this->model()->OSSAuthors()->add( $author );
+				$this->model()->{self::AuthorField}()->add( $author );
+				$mapped = true;
 			}
-
 		}
+		return $mapped;
+	}
+
+	/**
+	 * Gives the content a bit of a tidy before me set it on the OSSContent field.
+	 *
+	 * @param array|string $content
+	 *
+	 * @return bool
+	 */
+	public function mapOSSContent($content) {
+		$content = is_array($content) ? implode('\n', $content) : $content;
+
+		$content = trim(preg_replace( "/[\n]+/", "\n", $content ));
+
+		$this->model()->{self::ContentField} = $content;
+		return true;
 	}
 
 	/**
