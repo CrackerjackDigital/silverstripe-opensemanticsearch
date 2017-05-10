@@ -2,6 +2,9 @@
 
 namespace OpenSemanticSearch\Interfaces;
 
+use ArrayList;
+use DataList;
+
 interface ResultInterface {
 
 	/**
@@ -13,7 +16,7 @@ interface ResultInterface {
 	 *
 	 * @param mixed $include        what models to include in the results
 	 *
-	 * @return \SS_List
+	 * @return DataList|ArrayList
 	 */
 	public function models( $updateMetaData = false, $include = ServiceInterface::IncludeAll );
 

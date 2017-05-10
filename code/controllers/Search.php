@@ -2,6 +2,7 @@
 
 namespace OpenSemanticSearch\Controllers;
 
+use DataObject;
 use Member;
 use OpenSemanticSearch\Interfaces\SearchInterface;
 
@@ -23,6 +24,20 @@ class Search extends \ContentController {
 
 	public function canSearch() {
 		return true;
+	}
+
+	/**
+	 * Ask controller to check model can be viewed, applied in search method for
+	 * each model found in results.
+	 *
+	 * @param DataObject $model not used by default
+	 *
+	 * @return bool
+	 */
+	public function canViewModel( DataObject $model ) {
+		return $this->config()->get( 'require_login' )
+			? Member::currentUserID()
+			: true;
 	}
 
 	public function search( \SS_HTTPRequest $request ) {
@@ -47,7 +62,15 @@ class Search extends \ContentController {
 				$service = \Injector::inst()->get( SearchInterface::ServiceName );
 
 				if ( $result = $service->search( $terms ) ) {
-					$results = new \PaginatedList( $result->models( true ), $request );
+
+					// check with model and (this) controller if OK to view
+					$models = $result->models( true )
+					                 ->filterByCallback(
+						                 function ( DataObject $model ) {
+							                 return $model->canView() && $this->canViewModel( $model );
+						                 } );
+
+					$results = new \PaginatedList( $models, $request );
 				}
 			} catch ( \Exception $e ) {
 				$message = 'Sorry, there was a problem with your request, please try again later';

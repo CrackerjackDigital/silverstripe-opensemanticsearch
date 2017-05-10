@@ -33,6 +33,8 @@ class MetaDataExtension extends ModelExtension {
 		mappable_mapper,
 		mappable_map_map;
 
+	const CMSTabName = 'Root.SearchIndexFields';
+
 	const OSSIDField = 'OSSID';
 	const TitleField = 'OSSTitle';
 
@@ -82,7 +84,7 @@ class MetaDataExtension extends ModelExtension {
 	 */
 	public function mapOSSAuthors( array $authors ) {
 		$mapped = false;
-		if ($this->model()->hasMethod(self::AuthorField)) {
+		if ( $this->model()->hasMethod( self::AuthorField ) ) {
 			$authors = array_filter(
 				$authors,
 				'trim'
@@ -103,6 +105,7 @@ class MetaDataExtension extends ModelExtension {
 				$mapped = true;
 			}
 		}
+
 		return $mapped;
 	}
 
@@ -113,12 +116,13 @@ class MetaDataExtension extends ModelExtension {
 	 *
 	 * @return bool
 	 */
-	public function mapOSSContent($content) {
-		$content = is_array($content) ? implode('\n', $content) : $content;
+	public function mapOSSContent( $content ) {
+		$content = is_array( $content ) ? implode( '\n', $content ) : $content;
 
-		$content = trim(preg_replace( "/[\n]+/", "\n", $content ));
+		$content = trim( preg_replace( "/[\n]+/", "\n", $content ) );
 
 		$this->model()->{self::ContentField} = $content;
+
 		return true;
 	}
 
@@ -139,30 +143,26 @@ class MetaDataExtension extends ModelExtension {
 	}
 
 	/**
-	 * @param \FieldList $fields
+	 * @param FieldList $fields
 	 *
 	 * @return array
 	 *
 	 */
 	public function updateCMSFields( FieldList $fields ) {
-		if ( $fields->hasTabSet() ) {
-			$fields->addFieldsToTab(
-				'Root.SearchIndexFields',
-				[
-					new ReadonlyField( self::OSSIDField ),
-					new ReadonlyField( self::TitleField ),
-					new ReadonlyField( self::ContentTypeField ),
-					new ReadonlyField( self::ContentField ),
-					new ReadonlyField( self::LastModifiedField ) .
-					new ReadonlyField( self::RetrievedDateField ),
-				]
-			);
-			if ( $this->model()->hasMethod( self::AuthorField ) ) {
-				$fields->addFieldToTab(
-					'Root.SearchIndexFields',
-					new ReadonlyField( self::AuthorField )
-				);
-			}
+		$add = [
+			new ReadonlyField( self::OSSIDField ),
+			new ReadonlyField( self::TitleField ),
+			new ReadonlyField( self::ContentTypeField ),
+			new ReadonlyField( self::ContentField ),
+			new ReadonlyField( self::LastModifiedField ),
+			new ReadonlyField( self::RetrievedDateField ),
+		];
+
+		if ( $this->model()->hasMethod( self::AuthorField ) ) {
+			$add[] = new ReadonlyField( self::AuthorField );
+		}
+		foreach ( $add as $field ) {
+			$fields->push( $field );
 		}
 	}
 
