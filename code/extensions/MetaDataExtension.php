@@ -3,8 +3,6 @@
 namespace OpenSemanticSearch\Extensions;
 
 use ArrayData;
-use ArrayList;
-use DataObject;
 use DocumentAuthor;
 use FieldList;
 use File;
@@ -125,13 +123,19 @@ class MetaDataExtension extends ModelExtension {
 	}
 
 	/**
-	 * Called by traits, if exhibited on an extension this should return the owner, if exhibited
-	 * on a model this should return the model itself. Also usefull for type hinting inside this extension.
+	 * Return the OSS content type as the last part of the mime type that OSS detected,
+	 * e.g. 'pdf' for application/pdf. If no detected content type returns provided default.
 	 *
-	 * @return $this|File|Page|IndexedURL|MappableInterface
+	 * @param string $default returned if no detected content type.
+	 *
+	 * @return string
 	 */
-	public function model() {
-		return $this->owner;
+	public function OSSContentType( $default = '' ) {
+		if ( $type = $this->model()->{MetaDataExtension::ContentTypeField} ) {
+			return current( array_reverse( explode( '/', $type ) ) );
+		}
+
+		return $default;
 	}
 
 	/**
@@ -161,7 +165,6 @@ class MetaDataExtension extends ModelExtension {
 			}
 		}
 	}
-
 
 	/**
 	 * Returns OSS MetaData as an ArrayObject or a single value if passed.
@@ -211,6 +214,16 @@ class MetaDataExtension extends ModelExtension {
 		] );
 
 		return $this;
+	}
+
+	/**
+	 * Called by traits, if exhibited on an extension this should return the owner, if exhibited
+	 * on a model this should return the model itself. Also usefull for type hinting inside this extension.
+	 *
+	 * @return $this|File|Page|IndexedURL|MappableInterface
+	 */
+	public function model() {
+		return $this->owner;
 	}
 
 }
