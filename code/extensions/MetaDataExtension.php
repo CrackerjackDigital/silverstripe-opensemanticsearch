@@ -6,6 +6,7 @@ use ArrayData;
 use DocumentAuthor;
 use FieldList;
 use File;
+use Folder;
 use Modular\Fields\DateTimeField;
 use Modular\Interfaces\Mappable;
 use Modular\Interfaces\Mappable as Mappableinterface;
@@ -149,20 +150,22 @@ class MetaDataExtension extends ModelExtension {
 	 *
 	 */
 	public function updateCMSFields( FieldList $fields ) {
-		$add = [
-			new ReadonlyField( self::OSSIDField ),
-			new ReadonlyField( self::TitleField ),
-			new ReadonlyField( self::ContentTypeField ),
-			new ReadonlyField( self::ContentField ),
-			new ReadonlyField( self::LastModifiedField ),
-			new ReadonlyField( self::RetrievedDateField ),
-		];
+		if ($this->owner()->ClassName != Folder::class) {
+			$add = [
+				new ReadonlyField( self::OSSIDField ),
+				new ReadonlyField( self::TitleField ),
+				new ReadonlyField( self::ContentTypeField ),
+				new ReadonlyField( self::ContentField ),
+				new ReadonlyField( self::LastModifiedField ),
+				new ReadonlyField( self::RetrievedDateField ),
+			];
 
-		if ( $this->model()->hasMethod( self::AuthorField ) ) {
-			$add[] = new ReadonlyField( self::AuthorField );
-		}
-		foreach ( $add as $field ) {
-			$fields->push( $field );
+			if ( $this->model()->hasMethod( self::AuthorField ) ) {
+				$add[] = new ReadonlyField( self::AuthorField );
+			}
+			foreach ( $add as $field ) {
+				$fields->push( $field );
+			}
 		}
 	}
 
