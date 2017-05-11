@@ -41,7 +41,6 @@ OpenSemanticSearch\Models\MetaDataTask:
   extensions:
     - 'OpenSemanticSearch\Fields\IndexedItem'
     - 'OpenSemanticSearch\Fields\SourceQuery'
-    - 'OpenSemanticSearch\Extensions\MetaDataExtension'
 
 # add the following in app config for files
 # File:

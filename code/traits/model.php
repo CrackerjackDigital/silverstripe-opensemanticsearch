@@ -21,14 +21,11 @@ trait model {
 
 	abstract function owner();
 
-	public function onBeforeWrite() {
-		$this->remove($this->owner());
-	}
-
 	/**
-	 * Queue an IndexTask and a MetaData task for the model.
+	 * Queue a RemoveTask, IndexTask and a MetaDataTask for the model.
 	 */
 	public function onAfterWrite() {
+		$this->remove( $this->owner() );
 		$this->add($this->owner());
 		$this->metadata($this->owner());
 	}
