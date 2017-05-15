@@ -2,6 +2,8 @@
 
 namespace OpenSemanticSearch\Extensions;
 
+use FieldList;
+use Folder;
 use Modular\Interfaces\HTTP as HTTPInterface;
 use Modular\Traits\file_changed;
 use Modular\Traits\md5;
@@ -16,6 +18,8 @@ use OpenSemanticSearch\Traits\reindexer;
  *
  */
 class VersionedFileExtension extends VersionedModelExtension implements OSSID {
+	const IncludeInSearchField = 'ShowInSearch';
+
 	use file_changed {
 		fileChanged as shouldReIndex;
 	}
@@ -31,6 +35,23 @@ class VersionedFileExtension extends VersionedModelExtension implements OSSID {
 		return $link;
 	}
 
+	/**
+	 * @param FieldList $fields
+	 *
+	 * @return array
+	 *
+	 */
+	public function updateCMSFields( FieldList $fields ) {
+		if ($this->owner()->ClassName == Folder::class && $this->owner()->ParentID) {
+			$add = [
+				new \CheckboxField( self::IncludeInSearchField ),
+			];
+
+			foreach ( $add as $field ) {
+				$fields->push( $field );
+			}
+		}
+	}
 	/**
 	 * Queue a IndexTask to reindex the model.
 	 */

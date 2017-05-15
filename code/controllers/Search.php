@@ -44,9 +44,11 @@ class Search extends \ContentController {
 	 * @return bool
 	 */
 	public function canViewModel( DataObject $model ) {
-		return $this->config()->get( 'require_login' )
-			? Member::currentUserID()
-			: true;
+		return $model->canView() && (
+			$this->config()->get( 'require_login' )
+				? Member::currentUserID()
+				: true
+			);
 	}
 
 	public function search( \SS_HTTPRequest $request ) {
@@ -78,7 +80,7 @@ class Search extends \ContentController {
 					$models = $result->models( true )
 					                 ->filterByCallback(
 						                 function ( DataObject $model ) {
-							                 return $model->canView() && $this->canViewModel( $model );
+							                 return $this->canViewModel( $model );
 						                 } );
 
 					$results = new \PaginatedList( $models, $request );
