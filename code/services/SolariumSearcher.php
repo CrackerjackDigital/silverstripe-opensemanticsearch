@@ -10,6 +10,7 @@ use OpenSemanticSearch\Results\SolariumResult;
 use OpenSemanticSearch\Traits\array_bitfield_map;
 use OpenSemanticSearch\Traits\http;
 use OpenSemanticSearch\Traits\json;
+use OpenSemanticSearch\Traits\map_key_transform;
 use Solarium\Core\Client\Client;
 use Solarium\Core\Client\Endpoint;
 
@@ -20,6 +21,7 @@ use Solarium\Core\Client\Endpoint;
  */
 class SolariumSearcher extends SolrSearcher {
 	use array_bitfield_map;
+	use map_key_transform;
 	use json;
 	use http;
 
@@ -168,18 +170,15 @@ class SolariumSearcher extends SolrSearcher {
 	 *
 	 * @param null $options
 	 *
-	 * @return SearchInterface
+	 * @return SearchInterface|array
 	 */
 	public function searchOptions( $options = null ) {
 		if (func_num_args()) {
-			parent::searchOptions($options);
-
-			$this->searchOptions['rows'] = $this->searchOptions['limit'];
-			unset( $this->searchOptions['limit'] );
-
+			parent::searchOptions( $options );
+			$this->searchOptions = $this->map_key_transform( $this->searchOptions(), [ 'limit' => 'rows' ], false);
 			return $this;
 		} else {
-			return $this->searchOptions;
+			return $this->map_key_transform( parent::searchOptions(), [ 'limit' => 'rows' ]);
 		}
 	}
 
@@ -235,14 +234,5 @@ class SolariumSearcher extends SolrSearcher {
 			->setDefaultEndpoint( $this->endpoint() );
 	}
 
-	/**
-	 * @param string $type          e.g. 'client', 'query' etc maps to config
-	 * @param array  $moduleOptions options
-	 *
-	 * @return mixed to be fed to native methods
-	 */
-	protected function nativeOptions( $type, array $moduleOptions ) {
-		return $this->arr_to_btf( $moduleOptions, $this->option( $this->option( $type ), 'options' ) ?: [] );
-	}
 
 }

@@ -24,7 +24,7 @@ abstract class SolrSearcher extends Service implements SearchInterface {
 	 *
 	 * @param array $options
 	 *
-	 * @return SearchInterface
+	 * @return SearchInterface|mixed
 	 * @fluent-setter
 	 */
 	public function searchOptions($options = null) {
