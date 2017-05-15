@@ -91,8 +91,6 @@ class IndexTask extends QueuedTask {
 				default:
 					throw new Exception( "Unknown IndexTask action '$action'" );
 			}
-
-			$resultMessage = 'OK';
 		} catch ( \Exception $e ) {
 			$res           = false;
 			$resultMessage = $e->getMessage();

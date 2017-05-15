@@ -2,6 +2,7 @@
 
 namespace OpenSemanticSearch\Traits;
 
+use DataObject;
 use Modular\Fields\Title;
 use OpenSemanticSearch\Fields\IndexAction;
 use OpenSemanticSearch\Fields\IndexedItem;
@@ -14,21 +15,35 @@ use OpenSemanticSearch\Fields\IndexedItem;
  */
 trait remover {
 	/**
-	 * Remove an item from the index via a queued task
+	 * Return the model, if exhibited on a Model should return $this, if an extension should return owner.
 	 *
-	 * @param \DataObject $item for the task to index
+	 * @return DataObject
+	 */
+	abstract public function model();
+
+	protected function shouldRemove() {
+		return true;
+	}
+
+	/**
+	 * Remove an item from the index via a queued task
 	 *
 	 * @return
 	 */
-	protected function remove( $item) {
-		return \Injector::inst()->create(
-			'IndexTask',
-			[
-				Title::Name                     => "Remove '" . $this->owner()->Title . "' from index",
-				IndexAction::Name               => IndexAction::Remove,
-				IndexedItem::field_name()       => $item->ID,
-				IndexedItem::class_field_name() => $item->ClassName
-			]
-		)->dispatch();
+	protected function remove() {
+		if ($this->shouldRemove()) {
+
+			$model = $this->model();
+
+			return \Injector::inst()->create(
+				'IndexTask',
+				[
+					Title::Name                     => "Remove '" . $model->Title . "' from index",
+					IndexAction::Name               => IndexAction::Remove,
+					IndexedItem::field_name()       => $model->ID,
+					IndexedItem::class_field_name() => $model->ClassName,
+				]
+			)->dispatch();
+		}
 	}
 }

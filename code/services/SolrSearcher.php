@@ -14,6 +14,27 @@ use SiteTree;
 abstract class SolrSearcher extends Service implements SearchInterface {
 	const ServiceSolr    = self::TypeSolr;
 	const EndpointSearch = 'search';
+	const DefaultLimit   = 100;
+
+	/** @var mixed implementation specific options to pass to search library */
+	protected $searchOptions;
+
+	/**
+	 * Set or get options to pass to implementation
+	 *
+	 * @param array $options
+	 *
+	 * @return SearchInterface
+	 * @fluent-setter
+	 */
+	public function searchOptions($options = null) {
+		if (func_num_args()) {
+			$this->searchOptions = $options;
+			return $this;
+		} else {
+			return $this->searchOptions;
+		}
+	}
 
 	/**
 	 * Find a single specific indexed File
@@ -44,7 +65,7 @@ abstract class SolrSearcher extends Service implements SearchInterface {
 	 *
 	 * @param mixed|\SiteTree $pageOrIDPath
 	 *
-	 * @param bool $updateMetaData on the found model, doesn't write it
+	 * @param bool            $updateMetaData on the found model, doesn't write it
 	 *
 	 * @return null|Page|DataObject
 	 * @throws InvalidArgumentException

@@ -74,7 +74,8 @@ interface SearchInterface extends PathMappingInterface, ServiceInterface {
 		$options = [
 			#	'start'    => 0,
 			#	'sort'     => self::SortRelevance,
-			#	'type'    => '',                        // e.g. application/pdf, more specific than include if provided
+			#	'type'     => '',                        // e.g. application/pdf, more specific than include if provided
+			#   'limit'    => self::DefaultLimit,
 			#	'view'     => self::ViewList,
 			#	'operator' => self::OperatorOR,
 			#	'stemming' => self::Stemming,
@@ -82,4 +83,13 @@ interface SearchInterface extends PathMappingInterface, ServiceInterface {
 		],
 		$include = self::IncludeAll
 	);
+
+	/**
+	 * Sets/gets options as would be set by call to search, but seperately.
+	 * @param mixed $options if supplied sets, otherwise gets
+	 *
+	 * @return $this|mixed
+	 * @fluent-setter
+	 */
+	public function searchOptions($options = null);
 }

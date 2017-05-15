@@ -7,6 +7,7 @@ use DocumentAuthor;
 use FieldList;
 use File;
 use Folder;
+use Modular\ModelExtension;
 use Modular\Fields\DateTimeField;
 use Modular\Interfaces\Mappable;
 use Modular\Interfaces\Mappable as Mappableinterface;

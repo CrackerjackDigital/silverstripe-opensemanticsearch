@@ -2,8 +2,8 @@
 namespace OpenSemanticSearch\Extensions;
 
 use OpenSemanticSearch\Interfaces\OSSID;
-use OpenSemanticSearch\Traits\http;
-use Modular\Interfaces\HTTP as HTTPInterface;
+use OpenSemanticSearch\Traits\reindexer;
+use OpenSemanticSearch\Traits\remover;
 
 /**
  * Extension to add to Pages to control adding, removing and meta data tasks
@@ -13,14 +13,32 @@ use Modular\Interfaces\HTTP as HTTPInterface;
  * @property \Page owner
  */
 class PageExtension extends VersionedModelExtension implements OSSID {
-	use http;
+	use reindexer, remover;
 
-	public function OSSID($prefixSchema = false) {
-		$link = $this->owner()->Link();
-		if ($prefixSchema) {
-			$link = $this->rebuildURL($link, [ HTTPInterface::PartScheme => HTTPInterface::SchemeHTTP ]);
+	public function OSSID( $prefixSchema = false ) {
+		if ( $prefixSchema ) {
+			return $this->owner()->AbsoluteLink();
+		} else {
+			return $this->owner()->Link();
 		}
-		return $link;
 	}
 
+	/**
+	 * Queue an IndexTask for the model to reindex it.
+	 */
+	public function onBeforePublish() {
+		$this->reindex();
+	}
+
+	/**
+	 * Remove the file from the index.
+	 */
+	public function onAfterDelete() {
+		$this->remove();
+	}
+
+
+	public function shouldReIndex() {
+		return $this->owner()->isChanged();
+	}
 }

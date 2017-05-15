@@ -7,6 +7,9 @@ use Member;
 use OpenSemanticSearch\Interfaces\SearchInterface;
 
 class Search extends \ContentController {
+	const StartParam = 'start';
+	const LimitParam = 'limit';
+
 	private static $allowed_actions = [
 		'search' => '->canSearch',
 	];
@@ -21,6 +24,12 @@ class Search extends \ContentController {
 	];
 
 	private static $require_login = false;
+
+	/** @var array Default search parameters to use if none provided e.g. on query string or post */
+	private static $search_options = [
+		'start' => 0,
+		'limit' => 100,
+	];
 
 	public function canSearch() {
 		return true;
@@ -61,6 +70,8 @@ class Search extends \ContentController {
 				/** @var SearchInterface $service */
 				$service = \Injector::inst()->get( SearchInterface::ServiceName );
 
+				$service->searchOptions( $this->searchOptions( $request ) );
+
 				if ( $result = $service->search( $terms ) ) {
 
 					// check with model and (this) controller if OK to view
@@ -84,6 +95,27 @@ class Search extends \ContentController {
 				'Message' => $message,
 				'Query'   => $terms,
 			] )
+		);
+	}
+
+	/**
+	 * Return merged incoming options which override the config.search_options settings. Filters out values which are null.
+	 *
+	 * @param \SS_HTTPRequest $request
+	 *
+	 * @return array
+	 */
+	public function searchOptions( \SS_HTTPRequest $request ) {
+		$defaults = $this->config()->get( 'search_options' ) ?: [];
+
+		return array_filter(
+			[
+				'start' => $request->requestVar( self::StartParam ) ?: $defaults['start'],
+				'limit' => $request->requestVar( self::LimitParam ) ?: $defaults['limit'],
+			],
+			function ( $value ) {
+				return ! is_null( $value );
+			}
 		);
 	}
 

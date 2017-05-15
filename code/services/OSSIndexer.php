@@ -119,18 +119,28 @@ class OSSIndexer extends IndexService {
 			if ( $filename = $item->trackedValue( 'Filename' ) ) {
 				$this->removeFilePath( $filename );
 			}
-			$result = $this->removeFilePath( $item->Link() );
+			$fileName = $item->Link() ;
+
+			if (!$result = $this->removeFilePath( $fileName)) {
+				$resultMessage = "No such file '$fileName'";
+			}
 
 		} elseif ( $item instanceof \Page ) {
-			$result = $this->removePage( $item );
+			if (!$result = $this->removePage( $item )) {
+				$resultMessage = "No such Page '" . $item->Link() . "'";
+			}
 
-		} elseif ( $item->hasMethod( 'OSSID' ) ) {
+		} elseif ( $item->hasMethod( 'OSSID' ) || ($item instanceof OSSID) ) {
 			// item should have a Link method which returns the URL
-			$result = $this->removeURL( $item->OSSID() );
+			if (!$result = $this->removeURL( $item->OSSID() )) {
+				$resultMessage = "No such url '" . $item->OSSID() . "'";
+			}
 
 		} elseif ( $item->hasMethod( 'Link' ) ) {
 			// item should have a Link method which returns the URL
-			$result = $this->removeURL( $item->Link() );
+			if (!$result = $this->removeURL( $item->Link() )) {
+				$resultMessage = "No such link '" . $item->Link() . "'";
+			}
 		} else {
 			$result = false;
 		}
