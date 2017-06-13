@@ -18,19 +18,22 @@ use OpenSemanticSearch\Fields\IndexedItem;
 trait reindexer {
 	/**
 	 * Return the model, if exhibited on a Model should return $this, if an extension should return owner.
+	 *
 	 * @return DataObject
 	 */
 	abstract public function model();
 
-	abstract protected function shouldReIndex( $previousFileName = '', $modifiedField = FileModifiedStamp::Name, $hashField = FileContentHash::Name );
+	abstract protected function shouldReIndex( $filesOnly, $previousFileName = '', $modifiedField = FileModifiedStamp::Name, $hashField = FileContentHash::Name );
 
 	/**
-	 * Add an item to reindex via a queued task if it requires it
+	 * Add an item to reindex via a queued task if it requires it, by default only files not folders.
+	 *
+	 * @param bool $filesOnly
 	 *
 	 * @return
 	 */
-	protected function reindex( ) {
-		if ($this->shouldReIndex()) {
+	protected function reindex( $filesOnly = true ) {
+		if ( $this->shouldReIndex( $filesOnly ) ) {
 			$model = $this->model();
 
 			return \Injector::inst()->create(
