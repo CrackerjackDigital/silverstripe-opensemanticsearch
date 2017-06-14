@@ -21,7 +21,7 @@ class ErrorResult extends Result implements ResultInterface {
 	// probably not used in the case of errors
 	protected $limit;
 
-	public function __construct( $code = null, $data = null, $message = 'Failed' ) {
+	public function __construct( $message, $code = '', $data = null) {
 		parent::__construct( $code, $data, $message );
 	}
 
@@ -67,18 +67,24 @@ class ErrorResult extends Result implements ResultInterface {
 	/**
 	 * Return a displayable error message set in ctor.
 	 *
+	 * @param string $resultMessage set to result message
+	 *
 	 * @return string
 	 */
-	public function resultMessage() {
+	public function resultMessage(&$resultMessage = '') {
+		$resultMessage = $this->message;
 		return $this->message;
 	}
 
 	/**
 	 * Return the result code set in ctor.
 	 *
+	 * @param string $resultCode set to result code
+	 *
 	 * @return mixed
 	 */
-	public function resultCode() {
+	public function resultCode(&$resultCode = '') {
+		$resultCode = $this->code;
 		return $this->code;
 	}
 

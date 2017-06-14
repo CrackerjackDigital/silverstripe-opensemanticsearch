@@ -33,13 +33,13 @@ trait http {
 	 * @param array              $data   to send as the request payload (will become a POST if passed)
 	 * @param array              $tokens additional tokens to substitute into the uri
 	 *
-	 * @return mixed
+	 * @return \OpenSemanticSearch\Results\Result
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
-	public function request( $service, $endpoint, $params = [], $data = null, $tokens = [] ) {
+	public function request( $service, $endpoint, $params = [], $data = null, $tokens = [], $encode = true) {
 
-		if ( ! $uri = $this->uri( $service, $endpoint, $params, $tokens ) ) {
-			return false;
+		if ( ! $uri = $this->uri( $service, $endpoint, $params, $tokens, $encode) ) {
+			return new ErrorResult( "Failed to construct a uri for service '$service', endpoint '$endpoint'");
 		}
 		// make a stream context to use
 		$context = $this->context( $service, $endpoint, $data );
@@ -91,7 +91,7 @@ trait http {
 
 		} catch ( \Exception $e ) {
 			set_error_handler( $previousErrorHandler );
-			$result = new ErrorResult( $e->getMessage() );
+			$result = new ErrorResult( $e->getMessage(), $e->getCode() );
 		}
 
 		return $result;
@@ -144,13 +144,13 @@ trait http {
 		foreach ( $seperators as $key => $seperator ) {
 
 			if ( array_key_exists( $key, $parsed ) ) {
-				if (array_key_exists( $key, $rewrite)) {
-					$value = $rewrite[$key];
+				if ( array_key_exists( $key, $rewrite ) ) {
+					$value = $rewrite[ $key ];
 				} else {
-					$value = $parsed[$key];
+					$value = $parsed[ $key ];
 				}
 				// a null rewrite means don't add this value in
-				if (!is_null($value)) {
+				if ( ! is_null( $value ) ) {
 					// value for this key was parsed out, add it back and postfix
 					$out .= $parsed[ $key ] . $seperator;
 				}
@@ -213,8 +213,8 @@ trait http {
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
 	protected function uri( $service, $endpoint, $params = [], $tokens = [], $encode = HTTPInterface::QueryStringEncode ) {
-		if (!$uri = $this->option( $this->option( $this->option( 'endpoints' ), $service ), $endpoint )) {
-			throw new Exception("No uri configured for environment '$this->env'");
+		if ( ! $uri = $this->option( $this->option( $this->option( 'endpoints' ), $service ), $endpoint ) ) {
+			throw new Exception( "No uri configured for environment '$this->env'" );
 		}
 
 		// add default tokens
@@ -225,6 +225,11 @@ trait http {
 			],
 			$tokens
 		);
+
+		$encode = is_bool($encode)
+			? HTTPInterface::QueryStringEncode
+			: $encode;
+
 		$uri    = $this->replaceTokens( $uri, $tokens );
 		$uri    = $this->appendQueryParams( $uri, $params, $encode );
 
@@ -254,11 +259,11 @@ trait http {
 	 * @param string $toURI
 	 * @param array  $params
 	 *
-	 * @param string $encode
+	 * @param string|bool $encode
 	 *
 	 * @return string
 	 */
-	protected function appendQueryParams( $toURI, $params, $encode = HTTPInterface::QueryStringEncode ) {
+	protected function appendQueryParams( $toURI, $params, $encode = true ) {
 		if ( $qs = $this->buildQueryString( $params, $encode ) ) {
 			if ( false === strpos( $toURI, '?' ) ) {
 				$toURI .= "?$qs";
@@ -275,21 +280,34 @@ trait http {
 	 *
 	 * @param             $params
 	 *
-	 * @param string|bool $encode either method to call to encode parameters or boolean for rawurlencode (if true).
+	 * @param string|bool $encode either method to call to encode parameters or boolean for default encoding (as per HTTPInterface::QueryStringEncode).
 	 *
 	 * @return string
 	 */
-	protected function buildQueryString( $params, $encode = HTTPInterface::QueryStringEncode ) {
+	protected function buildQueryString( $params, $encode = true) {
 		// build query string from params, values are expected already to be url encoded
 		$qs = '';
+		if ( is_bool( $encode ) && $encode ) {
+			$method = HTTPInterface::QueryStringEncode;
+		} else {
+			$method = '';
+		}
+
 		foreach ( $params ?: [] as $name => $value ) {
-			if ( $encode ) {
-				if ( method_exists( $this, $encode ) ) {
-					$value = $this->$encode( $value );
-				} elseif ( is_callable( $encode ) ) {
-					$value = $encode( $value );
-				} else {
-					$encode = HTTPInterface::QueryStringEncode;
+			if (is_array($encode)) {
+				if ( isset( $encode[ $name ] ) ) {
+					$method = $encode[ $name ];
+				}
+			}
+			if ($method) {
+				if ( method_exists( $this, $method ) ) {
+
+					$value = $this->$method( $value );
+
+				} elseif ( is_callable( $method ) ) {
+
+					$value = $method( $value );
+
 				}
 			}
 			$qs .= "&$name=" . $value;
@@ -299,7 +317,7 @@ trait http {
 	}
 
 	protected function encodeSpaces( $value ) {
-		return str_replace(' ', '+', $value);
+		return str_replace( ' ', '+', $value );
 	}
 
 	/**
@@ -313,9 +331,15 @@ trait http {
 	 *
 	 * @return resource
 	 */
-	protected function context( $service, $endpoint = '', $data = null, $contextOptions = []) {
+	protected function context( $service, $endpoint = '', $data = null, $contextOptions = [] ) {
+		$options = $this->option( $this->option( $this->option( 'context_options' ), $service ), $endpoint )
+			?: (
+			$this->option( $this->option( 'context_options' ), $service )
+				?: []
+			);
+
 		$options = array_merge_recursive(
-			$this->option( 'context_options' )[ $service ] ?: [],
+			$options,
 			$contextOptions ?: []
 		);
 		if ( $data ) {

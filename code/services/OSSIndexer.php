@@ -35,43 +35,6 @@ class OSSIndexer extends IndexService {
 	const EndpointRemove    = 'delete';
 
 	/**
-	 * Given a raw response return something sensible given the encoding (e.g. json), headers and the body content.
-	 *
-	 * @param string $service  responding
-	 * @param string $endpoint responding
-	 * @param string $responseBody
-	 * @param array  $responseHeaders
-	 *
-	 * @param string $responseCodeKey
-	 *
-	 * @return mixed e.g. an array from json_decode
-	 * @internal param $responseCode
-	 * @internal param string $responseCodeKey
-	 */
-	protected function decodeResponse( $service, $endpoint = '', $responseBody, $responseHeaders = [], $responseCodeKey = 'ResponseCode' ) {
-		$responseHeaders = $responseHeaders ?: $this->parseHTTPResponseHeaders( $http_response_header );
-		$responseCode    = $responseCodeKey && isset( $responseHeaders[ $responseCodeKey ] )
-			? $responseHeaders[ $responseCodeKey ]
-			: '';
-
-		if ( $responseCode && ! $this->responseCodeIsOK( $responseCode ) ) {
-			$result = new ErrorResult();
-		} else {
-			// we got no response code in headers or it was OK, also decode from body
-			$data = $this->decode( $responseBody );
-			if ( $data === false ) {
-				$result = new ErrorResult();
-
-			} else {
-				$result = new OSSResult( $responseCode, $data );
-
-			}
-		}
-
-		return $result;
-	}
-
-	/**
 	 * @param \DataObject $item
 	 * @param string      $resultMessage
 	 *
@@ -81,6 +44,7 @@ class OSSIndexer extends IndexService {
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
 	public function add( $item, &$resultMessage = '' ) {
+		/** @var \OpenSemanticSearch\Results\Result $result */
 		if ( $item instanceof \Folder ) {
 			$result = $this->addDirectory( $item->Link() );
 		} elseif ( $item instanceof \File ) {
@@ -95,15 +59,16 @@ class OSSIndexer extends IndexService {
 			// the model should have a Link method which returns the url to index
 			$result = $this->addURL( $item->Link() );
 		} else {
-			$result = false;
+			$result = new ErrorResult( "Don't know what to do with item '" . get_class( $item ) . "'" );
 		}
+		$resultMessage = $result->resultMessage();
 
-		return $result;
+		return $result->isOK();
 	}
 
 	/**
 	 * @param \DataObject|TrackedValue $item
-	 * @param string      $resultMessage
+	 * @param string                   $resultMessage
 	 *
 	 * @return bool
 	 * @throws \InvalidArgumentException
@@ -111,6 +76,7 @@ class OSSIndexer extends IndexService {
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
 	public function remove( $item, &$resultMessage = '' ) {
+		/** @var \OpenSemanticSearch\Results\Result $result */
 		if ( $item instanceof \File ) {
 			// handles File and Folder
 
@@ -119,33 +85,27 @@ class OSSIndexer extends IndexService {
 			if ( $filename = $item->trackedValue( 'Filename' ) ) {
 				$this->removeFilePath( $filename );
 			}
-			$fileName = $item->Link() ;
+			$fileName = $item->Link();
 
-			if (!$result = $this->removeFilePath( $fileName)) {
-				$resultMessage = "No such file '$fileName'";
-			}
+			$result = $this->removeFilePath( $fileName );
 
 		} elseif ( $item instanceof \Page ) {
-			if (!$result = $this->removePage( $item )) {
-				$resultMessage = "No such Page '" . $item->Link() . "'";
-			}
+			$result = $this->removePage( $item );
 
-		} elseif ( $item->hasMethod( 'OSSID' ) || ($item instanceof OSSID) ) {
+		} elseif ( $item->hasMethod( 'OSSID' ) || ( $item instanceof OSSID ) ) {
 			// item should have a Link method which returns the URL
-			if (!$result = $this->removeURL( $item->OSSID() )) {
-				$resultMessage = "No such url '" . $item->OSSID() . "'";
-			}
+			$result = $this->removeURL( $item->OSSID() );
 
 		} elseif ( $item->hasMethod( 'Link' ) ) {
 			// item should have a Link method which returns the URL
-			if (!$result = $this->removeURL( $item->Link() )) {
-				$resultMessage = "No such link '" . $item->Link() . "'";
-			}
-		} else {
-			$result = false;
-		}
+			$result = $this->removeURL( $item->Link() );
 
-		return $result;
+		} else {
+			$result = new ErrorResult( "Don't know what to do with item '" . get_class( $item ) . "'" );
+		}
+		$resultMessage = $result->resultMessage();
+
+		return $result->isOK();
 	}
 
 	/**
@@ -160,11 +120,13 @@ class OSSIndexer extends IndexService {
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
 	public function reindex( $item, &$resultMessage = '' ) {
+		/** @var \OpenSemanticSearch\Results\Result $result */
 		if ( $result = $this->remove( $item, $resultMessage ) ) {
 			$result = $this->add( $item, $resultMessage );
 		}
+		$resultMessage = $result->resultMessage();
 
-		return $result;
+		return $result->isOK();
 	}
 
 	/**
@@ -202,7 +164,7 @@ class OSSIndexer extends IndexService {
 			return false;
 		}
 
-		$uri = $this->rebuildURL( $remotePath , [ HTTPInterface::PartScheme => 'file' ] );
+		$uri = $this->rebuildURL( $remotePath, [ HTTPInterface::PartScheme => 'file' ] );
 
 		return $this->request(
 			self::ServiceOSS,
@@ -210,7 +172,7 @@ class OSSIndexer extends IndexService {
 			[
 				'uri' => $uri,
 			]
-		)->isOK();
+		);
 
 	}
 
@@ -235,7 +197,7 @@ class OSSIndexer extends IndexService {
 			[
 				'uri' => $uri,
 			]
-		)->isOK();
+		);
 	}
 
 	/**
@@ -261,7 +223,7 @@ class OSSIndexer extends IndexService {
 	/**
 	 * @param \Page|int $pageOrID
 	 *
-	 * @return bool
+	 * @return \OpenSemanticSearch\Results\Result
 	 * @throws \InvalidArgumentException
 	 * @throws \Modular\Exceptions\Exception
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
@@ -280,8 +242,12 @@ class OSSIndexer extends IndexService {
 			self::EndpointRemove,
 			[
 				'uri' => $page->AbsoluteLink(),
+			],
+			[],
+			[
+				'uri' => false      // don't encode uri
 			]
-		)->isOK();
+		);
 	}
 
 	/**
@@ -298,8 +264,13 @@ class OSSIndexer extends IndexService {
 			self::EndpointIndexURL,
 			[
 				'uri' => $absoluteURL,
+			],
+			[],
+			[],
+			[
+				'uri' => false      // don't encode uri
 			]
-		)->isOK();
+		);
 	}
 
 	/**
@@ -316,8 +287,47 @@ class OSSIndexer extends IndexService {
 			self::EndpointRemove,
 			[
 				'uri' => $absoluteURL,
+			],
+			[],
+			[
+				'uri' => false      // don't encode uri
 			]
-		)->isOK();
+		);
+	}
+
+	/**
+	 * Given a raw response return something sensible given the encoding (e.g. json), headers and the body content.
+	 *
+	 * @param string $service  responding
+	 * @param string $endpoint responding
+	 * @param string $responseBody
+	 * @param array  $responseHeaders
+	 *
+	 * @param string $responseCodeKey
+	 *
+	 * @return \OpenSemanticSearch\Results\Result
+	 */
+	protected function decodeResponse( $service, $endpoint = '', $responseBody, $responseHeaders = [], $responseCodeKey = 'ResponseCode' ) {
+		$responseHeaders = $responseHeaders ?: $this->parseHTTPResponseHeaders( $http_response_header );
+		$responseCode    = $responseCodeKey && isset( $responseHeaders[ $responseCodeKey ] )
+			? $responseHeaders[ $responseCodeKey ]
+			: '';
+
+		if ( $responseCode && ! $this->responseCodeIsOK( $responseCode ) ) {
+			$result = new ErrorResult($responseBody ?: "Got response $responseCode from service '$service', endpoint '$endpoint'");
+		} else {
+			// we got no response code in headers or it was OK, also decode from body
+			$data = $this->decode( $responseBody );
+			if ( $data === false ) {
+				$result = new ErrorResult("No data");
+
+			} else {
+				$result = new OSSResult( $responseCode, $data );
+
+			}
+		}
+
+		return $result;
 	}
 
 }

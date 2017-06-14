@@ -71,15 +71,15 @@ class SolariumSearcher extends SolrSearcher {
 
 			if ( $this->responseIsOK( $result ) ) {
 				$response = new SolariumResult(
+					$result->getResponse()->getStatusMessage(),
 					$result->getResponse()->getStatusCode(),
-					$result,
-					$result->getResponse()->getStatusMessage()
+					$result
 				);
 			} else {
 				$response = new ErrorResult(
+					$result->getResponse()->getStatusMessage(),
 					$result->getResponse()->getStatusCode(),
-					$result->getData(),
-					$result->getResponse()->getStatusMessage()
+					$result->getData()
 				);
 			}
 
@@ -150,9 +150,9 @@ class SolariumSearcher extends SolrSearcher {
 				$response = new SolariumResult( null, $result );
 			} else {
 				$response = new ErrorResult(
+					$result->getResponse()->getStatusMessage(),
 					$result->getResponse()->getStatusCode(),
-					$result->getData(),
-					$result->getResponse()->getStatusMessage()
+					$result->getData()
 				);
 			}
 

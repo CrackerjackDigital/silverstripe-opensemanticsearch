@@ -71,9 +71,10 @@ OpenSemanticSearch\Services\OSSIndexer:
   context_options:
     dev:
       oss:
-        http:
-          method: 'GET'
-          timeout: 10    # 20 seconds in dev mode for testing
+        '*':
+          http:
+            method: 'GET'
+            timeout: 10    # 20 seconds in dev mode for testing
   endpoints:
     dev:
       oss:

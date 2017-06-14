@@ -2,6 +2,8 @@
 
 namespace OpenSemanticSearch\Results;
 
+use OpenSemanticSearch\Interfaces\ServiceInterface;
+
 /**
  * OSSResult wraps a result returned from a call to OpenSemanticSearch endpoints.
  *
@@ -24,12 +26,14 @@ class OSSResult extends Result {
 	/**
 	 * Return empty list as no models returned by API.
 	 *
-	 * @param bool $updateMetaData if true then models will be updated from returned search results
-	 *                             via MetaDataExtension.updateOSSMetaData()
+	 * @param bool      $updateMetaData if true then models will be updated from returned search results
+	 *                                  via MetaDataExtension.updateOSSMetaData()
+	 *
+	 * @param int|mixed $include
 	 *
 	 * @return \ArrayList
 	 */
-	public function models($updateMetaData = false) {
+	public function models($updateMetaData = false, $include = ServiceInterface::IncludeAll) {
 		return new \ArrayList($this->items());
 	}
 
