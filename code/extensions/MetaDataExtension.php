@@ -165,7 +165,7 @@ class MetaDataExtension extends ModelExtension {
 				$add[] = new ReadonlyField( self::AuthorField );
 			}
 			foreach ( $add as $field ) {
-				$fields->push( $field );
+				$fields->addFieldToTab( 'Root.SearchInfo', $field );
 			}
 		}
 	}

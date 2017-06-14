@@ -52,17 +52,5 @@ class VersionedFileExtension extends VersionedModelExtension implements OSSID {
 			}
 		}
 	}
-	/**
-	 * Queue a IndexTask to reindex the model.
-	 */
-	public function onBeforePublish() {
-		$this->reindex();
-	}
 
-	/**
-	 * Remove the file from the index.
-	 */
-	public function onAfterDelete() {
-		$this->remove();
-	}
 }

@@ -3,6 +3,7 @@
 namespace OpenSemanticSearch\Results;
 
 use OpenSemanticSearch\Interfaces\ResultInterface;
+use OpenSemanticSearch\Interfaces\ServiceInterface;
 
 /**
  * Generic response to return if no real response can be constructed due to an error happening.
@@ -27,9 +28,12 @@ class ErrorResult extends Result implements ResultInterface {
 	/**
 	 * Return an empty ArrayList for an error.
 	 *
+	 * @param bool      $updateMetaData not used
+	 * @param int|mixed $include not used
+	 *
 	 * @return \ArrayList
 	 */
-	public function models() {
+	public function models($updateMetaData = false, $include = ServiceInterface::IncludeAll) {
 		return new \ArrayList();
 	}
 

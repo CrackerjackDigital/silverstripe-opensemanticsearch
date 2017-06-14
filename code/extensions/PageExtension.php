@@ -13,8 +13,6 @@ use OpenSemanticSearch\Traits\remover;
  * @property \Page owner
  */
 class PageExtension extends VersionedModelExtension implements OSSID {
-	use reindexer, remover;
-
 	public function OSSID( $prefixSchema = false ) {
 		if ( $prefixSchema ) {
 			return $this->owner()->AbsoluteLink();
@@ -22,22 +20,10 @@ class PageExtension extends VersionedModelExtension implements OSSID {
 			return $this->owner()->Link();
 		}
 	}
-
 	/**
-	 * Queue an IndexTask for the model to reindex it.
+	 * Check if any fields have changed so we can reindex page.
+	 * @return bool
 	 */
-	public function onBeforePublish() {
-		$this->reindex();
-	}
-
-	/**
-	 * Remove the file from the index.
-	 */
-	public function onAfterDelete() {
-		$this->remove();
-	}
-
-
 	public function shouldReIndex() {
 		return $this->owner()->isChanged();
 	}

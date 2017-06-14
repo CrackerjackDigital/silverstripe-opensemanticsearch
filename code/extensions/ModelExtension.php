@@ -2,6 +2,7 @@
 
 namespace OpenSemanticSearch\Extensions;
 
+use OpenSemanticSearch\Traits\reindexer;
 use OpenSemanticSearch\Traits\remover;
 
 /**
@@ -10,9 +11,24 @@ use OpenSemanticSearch\Traits\remover;
  * @package OpenSemanticSearch
  */
 abstract class ModelExtension extends \Modular\ModelExtension {
-	use remover;
+	use remover, reindexer;
 
 	public function model() {
 		return $this->owner();
 	}
+
+	/**
+	 * Queue an IndexTask to reindex the model
+	 */
+	public function onBeforeWrite() {
+		$this->reindex();
+	}
+
+	/**
+	 * Remove the file from the index.
+	 */
+	public function onAfterDelete() {
+		$this->remove();
+	}
+
 }

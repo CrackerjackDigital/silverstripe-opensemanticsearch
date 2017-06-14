@@ -123,18 +123,4 @@ class FileExtension extends ModelExtension implements OSSID {
 		}
 	}
 
-	/**
-	 * Queue an IndexTask to reindex the model
-	 */
-	public function onBeforeWrite() {
-		$this->reindex();
-	}
-
-	/**
-	 * Remove the file from the index.
-	 */
-	public function onAfterDelete() {
-		$this->remove();
-	}
-
 }

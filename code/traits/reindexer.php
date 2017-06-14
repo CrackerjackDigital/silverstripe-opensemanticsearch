@@ -23,7 +23,7 @@ trait reindexer {
 	 */
 	abstract public function model();
 
-	abstract protected function shouldReIndex( $filesOnly, $previousFileName = '', $modifiedField = FileModifiedStamp::Name, $hashField = FileContentHash::Name );
+	abstract protected function shouldReIndex();
 
 	/**
 	 * Add an item to reindex via a queued task if it requires it, by default only files not folders.
@@ -32,8 +32,8 @@ trait reindexer {
 	 *
 	 * @return
 	 */
-	protected function reindex( $filesOnly = true ) {
-		if ( $this->shouldReIndex( $filesOnly ) ) {
+	protected function reindex() {
+		if ( $this->shouldReIndex() ) {
 			$model = $this->model();
 
 			return \Injector::inst()->create(
