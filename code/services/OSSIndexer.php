@@ -35,6 +35,26 @@ class OSSIndexer extends IndexService {
 	const EndpointRemove    = 'delete';
 
 	/**
+	 * Remove then add the item.
+	 *
+	 * @param \DataObject $item
+	 * @param string      $resultMessage
+	 *
+	 * @return bool
+	 * @throws \InvalidArgumentException
+	 * @throws \Modular\Exceptions\Exception
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
+	 */
+	public function reindex( $item, &$resultMessage = '' ) {
+		/** @var \OpenSemanticSearch\Results\Result $result */
+		if ( $ok = $this->remove( $item, $resultMessage ) ) {
+			$ok = $this->add( $item, $resultMessage );
+		}
+
+		return $ok;
+	}
+
+	/**
 	 * @param \DataObject $item
 	 * @param string      $resultMessage
 	 *
@@ -108,26 +128,6 @@ class OSSIndexer extends IndexService {
 		return $result->isOK();
 	}
 
-	/**
-	 * Remove then add the item.
-	 *
-	 * @param \DataObject $item
-	 * @param string      $resultMessage
-	 *
-	 * @return mixed
-	 * @throws \InvalidArgumentException
-	 * @throws \Modular\Exceptions\Exception
-	 * @throws \OpenSemanticSearch\Exceptions\Exception
-	 */
-	public function reindex( $item, &$resultMessage = '' ) {
-		/** @var \OpenSemanticSearch\Results\Result $result */
-		if ( $result = $this->remove( $item, $resultMessage ) ) {
-			$result = $this->add( $item, $resultMessage );
-		}
-		$resultMessage = $result->resultMessage();
-
-		return $result->isOK();
-	}
 
 	/**
 	 * @param string $localPath relative to assets folder or absolute from wb root root of file to add to index.
@@ -136,7 +136,7 @@ class OSSIndexer extends IndexService {
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 * @api
 	 */
-	public function addFile( $localPath ) {
+	protected function addFile( $localPath ) {
 		return $this->addFilePath( $localPath, self::EndpointIndexFile );
 	}
 
@@ -147,7 +147,7 @@ class OSSIndexer extends IndexService {
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 * @api
 	 */
-	public function addDirectory( $localPath ) {
+	protected function addDirectory( $localPath ) {
 		return $this->addFilePath( $localPath, self::EndpointIndexDir );
 	}
 
@@ -158,7 +158,7 @@ class OSSIndexer extends IndexService {
 	 * @return bool
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
-	public function addFilePath( $localPath, $endpoint ) {
+	protected function addFilePath( $localPath, $endpoint ) {
 		if ( ! $remotePath = $this->localToRemotePath( $localPath ) ) {
 			// doesn't exist in file system or not in a safe place or mappable to a remote path
 			return false;
@@ -185,7 +185,7 @@ class OSSIndexer extends IndexService {
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 * @api
 	 */
-	public function removeFilePath( $localPath ) {
+	protected function removeFilePath( $localPath ) {
 		if ( ! $remotePath = $this->localToRemotePath( $localPath ) ) {
 			return false;
 		}
@@ -208,7 +208,7 @@ class OSSIndexer extends IndexService {
 	 * @throws \Modular\Exceptions\Exception
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
-	public function addPage( $pageOrID ) {
+	protected function addPage( $pageOrID ) {
 		if ( $pageOrID && is_int( $pageOrID ) ) {
 			$page = SiteTree::get()->byID( $pageOrID );
 		} elseif ( $pageOrID instanceof SiteTree ) {
@@ -228,7 +228,7 @@ class OSSIndexer extends IndexService {
 	 * @throws \Modular\Exceptions\Exception
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
-	public function removePage( $pageOrID ) {
+	protected function removePage( $pageOrID ) {
 		if ( $pageOrID && is_int( $pageOrID ) ) {
 			$page = SiteTree::get()->byID( $pageOrID );
 		} elseif ( $pageOrID instanceof SiteTree ) {
@@ -258,7 +258,7 @@ class OSSIndexer extends IndexService {
 	 * @return bool
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
-	public function addURL( $absoluteURL ) {
+	protected function addURL( $absoluteURL ) {
 		return $this->request(
 			self::ServiceOSS,
 			self::EndpointIndexURL,
@@ -281,7 +281,7 @@ class OSSIndexer extends IndexService {
 	 * @return mixed
 	 * @throws \OpenSemanticSearch\Exceptions\Exception
 	 */
-	public function removeURL( $absoluteURL ) {
+	protected function removeURL( $absoluteURL ) {
 		return $this->request(
 			self::ServiceOSS,
 			self::EndpointRemove,
