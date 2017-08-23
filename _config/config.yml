@@ -67,14 +67,10 @@ OpenSemanticSearch\Services\Service:
       '/assets/': '/mount/files/assets/'
   core:
     '*': 'core1'
+
+# these lines should be configured in site config to point to your opensemanticsearch services, they default to
+# localhost for development environment, also add test and live environments the same format as from 'dev' key down
 OpenSemanticSearch\Services\OSSIndexer:
-  context_options:
-    dev:
-      oss:
-        '*':
-          http:
-            method: 'GET'
-            timeout: 10    # 20 seconds in dev mode for testing
   endpoints:
     dev:
       oss:
