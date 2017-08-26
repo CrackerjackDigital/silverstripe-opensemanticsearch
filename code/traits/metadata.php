@@ -7,8 +7,8 @@ use OpenSemanticSearch\Fields\IndexAction;
 use OpenSemanticSearch\Fields\IndexedItem;
 
 /**
- * Adds a MetaDataTask to the queue or executes a MetaDataTask depending on Injector
- * MetaDataTask config.
+ * Adds a MetaData to the queue or executes a MetaData depending on Injector
+ * MetaData config.
  *
  * @package OpenSemanticSearch
  */
@@ -23,7 +23,7 @@ trait metadata {
 	 */
 	protected function metadata( $item ) {
 		return \Injector::inst()->create(
-			'MetaDataTask',
+			'MetaData',
 			[
 				Title::Name                     => "Get MetaData for '" . $this->owner()->Title . "'",
 				IndexedItem::field_name()       => $item->ID,

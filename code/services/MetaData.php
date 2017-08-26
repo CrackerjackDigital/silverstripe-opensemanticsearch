@@ -27,10 +27,11 @@ class MetaDataService extends Service implements MetaDataInterface {
 	}
 
 	/**
-	 * @param \DataObject|\OpenSemanticSearch\Interfaces\OSSID $model
+	 * @param \DataObject|OSSID $model
 	 *
 	 * @return \DataObject|null
-	 * @throws \Modular\Exceptions\Exception
+	 * @throws \Exception
+	 * @throws \Modular\Exceptions\Debug
 	 */
 	public function populateMetaData($model) {
 		if (!$this->validModel($model)) {

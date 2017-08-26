@@ -2,7 +2,7 @@
 namespace OpenSemanticSearch\Tasks;
 
 use Modular\Task;
-use OpenSemanticSearch\Services\IndexService;
+use OpenSemanticSearch\Services\Index;
 use SiteTree;
 
 class ReIndexPagesTask extends Task {
@@ -22,7 +22,7 @@ class ReIndexPagesTask extends Task {
 		} else {
 			ob_start();
 		}
-		$service = IndexService::get();
+		$service = Index::get();
 
 		/** @var SiteTree|\OpenSemanticSearch\Extensions\VersionedModelExtension $page */
 		$pages = SiteTree::get();

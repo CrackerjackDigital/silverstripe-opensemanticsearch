@@ -4,9 +4,7 @@ namespace OpenSemanticSearch\Tasks;
 
 use File;
 use Modular\Task;
-use OpenSemanticSearch\Extensions\VersionedFileExtension;
-use OpenSemanticSearch\Services\IndexService;
-use SiteTree;
+use OpenSemanticSearch\Services\Index;
 
 class ReIndexFilesTask extends Task {
 
@@ -25,7 +23,7 @@ class ReIndexFilesTask extends Task {
 		} else {
 			ob_start();
 		}
-		$service = IndexService::get();
+		$service = Index::get();
 
 		/** @var File|\OpenSemanticSearch\Extensions\VersionedModelExtension $page */
 		$files = File::get();

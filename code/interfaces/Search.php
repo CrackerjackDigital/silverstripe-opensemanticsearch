@@ -5,9 +5,13 @@ namespace OpenSemanticSearch\Interfaces;
 use OpenSemanticSearch\Models\IndexedURL;
 
 interface SearchInterface extends PathMappingInterface, ServiceInterface {
-	const ServiceName       = 'SearchService';
+	const ServiceName       = 'SearchAdapter';
 	const FilterYear        = 'year';
 	const FilterContentType = 'type';
+
+	public function setResultResponseClass( $className );
+
+	public function setErrorResponseClass( $className );
 
 	/**
 	 * Return a single model by it's OSS ID

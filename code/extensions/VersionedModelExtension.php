@@ -27,7 +27,7 @@ abstract class VersionedModelExtension extends \DataExtension implements OSSID {
 	}
 
 	/**
-	 * Queue a IndexTask to reindex the model.
+	 * Queue a Index to reindex the model.
 	 */
 	public function onBeforePublish() {
 		$this->remove();

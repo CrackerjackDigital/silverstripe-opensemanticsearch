@@ -5,6 +5,7 @@ namespace OpenSemanticSearch\Services;
 use Modular\Exceptions\Exception;
 use Modular\Extensions\Model\TrackedValue;
 use Modular\Interfaces\HTTP as HTTPInterface;
+use OpenSemanticSearch\Interfaces\IndexInterface;
 use OpenSemanticSearch\Interfaces\OSSID;
 use OpenSemanticSearch\Results\ErrorResult;
 use OpenSemanticSearch\Results\OSSResult;
@@ -20,7 +21,7 @@ use SiteTree;
  *
  * @package OpenSemanticSearch
  */
-class OSSIndexer extends IndexService {
+class Index extends Service implements IndexInterface {
 	use json, http;
 
 	// for http::request
@@ -109,7 +110,7 @@ class OSSIndexer extends IndexService {
 
 			$result = $this->removeFilePath( $fileName );
 
-		} elseif ( $item instanceof \Page ) {
+		} elseif ( $item instanceof SiteTree ) {
 			$result = $this->removePage( $item );
 
 		} elseif ( $item->hasMethod( 'OSSID' ) || ( $item instanceof OSSID ) ) {

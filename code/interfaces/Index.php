@@ -3,7 +3,7 @@
 namespace OpenSemanticSearch\Interfaces;
 
 interface IndexInterface extends PathMappingInterface, ServiceInterface {
-	const ServiceName = 'IndexService';
+	const ServiceName = 'IndexAdapter';
 
 	/**
 	 * @param \DataObject $item e.g Page, File, URL

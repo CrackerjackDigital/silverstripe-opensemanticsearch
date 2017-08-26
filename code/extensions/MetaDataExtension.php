@@ -3,10 +3,10 @@
 namespace OpenSemanticSearch\Extensions;
 
 use ArrayData;
-use DocumentAuthor;
 use FieldList;
 use File;
 use Folder;
+use Modular\Fields\Title;
 use Modular\ModelExtension;
 use Modular\Fields\DateTimeField;
 use Modular\Interfaces\Mappable;
@@ -15,8 +15,8 @@ use Modular\Traits\bitfield;
 use Modular\Traits\mappable_map_map;
 use Modular\Traits\mappable_mapper;
 use Modular\Traits\mappable_model;
+use OpenSemanticSearch\Models\DocumentAuthor;
 use OpenSemanticSearch\Models\IndexedURL;
-use Page;
 use ReadonlyField;
 use SS_List;
 
@@ -86,6 +86,7 @@ class MetaDataExtension extends ModelExtension {
 	 */
 	public function mapOSSAuthors( array $authors ) {
 		$mapped = false;
+		// check model actually has an Authors relationship
 		if ( $this->model()->hasMethod( self::AuthorField ) ) {
 			$authors = array_filter(
 				$authors,
@@ -93,13 +94,13 @@ class MetaDataExtension extends ModelExtension {
 			);
 
 			$existing = DocumentAuthor::get()->filter( [
-				'Title' => $authors,
+				Title::Name => $authors,
 			] );
 
 			foreach ( $authors as $title ) {
 				if ( ! $author = $existing->find( 'Title', $title ) ) {
 					$author = new DocumentAuthor( [
-						'Title' => $title,
+						Title::Name => $title,
 					] );
 					$author->write();
 				}

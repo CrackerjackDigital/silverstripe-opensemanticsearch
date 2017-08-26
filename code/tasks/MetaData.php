@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenSemanticSearch\Models;
+namespace OpenSemanticSearch\Tasks;
 
 use ArrayList;
 use InvalidArgumentException;
@@ -18,7 +18,7 @@ use SS_List;
  *
  * @package OpenSemanticSearch
  */
-class MetaDataTask extends QueuedTask {
+class MetaData extends QueuedTask {
 	const QueueName = 'OpenSemanticSearch';
 
 	private static $singular_name = 'Search MetaData retrieval Task';
