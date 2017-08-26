@@ -12,7 +12,7 @@ use Modular\Fields\DateTimeField;
 use Modular\Interfaces\Mappable;
 use Modular\Interfaces\Mappable as Mappableinterface;
 use Modular\Traits\bitfield;
-use Modular\Traits\mappable_map_map;
+use Modular\Traits\mappable_map_dots;
 use Modular\Traits\mappable_mapper;
 use Modular\Traits\mappable_model;
 use OpenSemanticSearch\Models\DocumentAuthor;
@@ -33,7 +33,7 @@ class MetaDataExtension extends ModelExtension {
 	use bitfield,
 		mappable_model,
 		mappable_mapper,
-		mappable_map_map;
+		mappable_map_dots;
 
 	const CMSTabName = 'Root.SearchIndexFields';
 
