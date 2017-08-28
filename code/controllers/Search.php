@@ -67,6 +67,8 @@ class Search extends \ContentController {
 
 		$message = '';
 
+		$this->extend( 'onBeforeSearch', $terms, $results );
+
 		if ( $terms ) {
 			try {
 				/** @var SearchInterface $service */
@@ -83,12 +85,17 @@ class Search extends \ContentController {
 							                 return $this->canViewModel( $model );
 						                 } );
 
-					$results = new \PaginatedList( $models, $request );
+					$results->merge( $models );
 				}
+
 			} catch ( \Exception $e ) {
-				$message = 'Sorry, there was a problem with your request, please try again later';
+				$message = 'Sorry, our search service is under maintenance at the moment, please try again later';
 			}
+
 		}
+		$this->extend( 'onAfterSearch', $terms, $results );
+
+		$results = new \PaginatedList( $results, $request );
 
 		return $this->renderWith(
 			$this->config()->get( 'results_templates' ),

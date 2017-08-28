@@ -4,8 +4,11 @@ namespace OpenSemanticSearch\Traits;
 
 use DataObject;
 use Modular\Fields\Title;
+use OpenSemanticSearch\Extensions\MetaDataExtension;
+use OpenSemanticSearch\Extensions\ModelExtension;
 use OpenSemanticSearch\Fields\IndexAction;
 use OpenSemanticSearch\Fields\IndexedItem;
+use OpenSemanticSearch\Fields\LastIndexedDate;
 
 /**
  * Remover Queues a remove task for later or does it immediately depending on Injector
@@ -21,8 +24,12 @@ trait remover {
 	 */
 	abstract public function model();
 
+	/**
+	 * Only remove if we've been indexed previously.
+	 * @return bool
+	 */
 	protected function shouldRemove() {
-		return true;
+		return (bool)$this->model()->{LastIndexedDate::Name};
 	}
 
 	/**

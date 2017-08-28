@@ -14,53 +14,12 @@ Injector:
     class: 'OpenSemanticSearch\Models\IndexTask'
   MetaDataTask:
     class: 'OpenSemanticSearch\Models\MetaDataTask'
-File:
-  extensions:
-    - 'Modular\Fields\FileContentHash'
-    - 'Modular\Fields\FileModifiedStamp'
-    - 'OpenSemanticSearch\Extensions\MetaDataExtension'
-    - 'Modular\Extensions\Model\TrackedValue("Filename")'
-
-#    - 'OpenSemanticSearch\Extensions\FileExtension'              # add in site config for 'normal' files
-#    - 'OpenSemanticSearch\Extensions\VersionedModelExtension'     # add in site config for 'versioned' files
-Page:
-  extensions:
-    - 'OpenSemanticSearch\Extensions\MetaDataExtension'
-
-#    - 'OpenSemanticSearch\Extensions\PageExtension'              # add in app config to Page or subclasses to make searchable
-OpenSemantionSearch\Models\IndexedURL:
-  extensions:
-    - 'Modular\Fields\Title'
-    - 'Modular\Fields\Description'
-    - 'Modular\Fields\URL'
 OpenSemanticSearch\Models\IndexTask:
   dependencies:
     service: %$IndexService
-  extensions:
-    - 'OpenSemanticSearch\Fields\IndexAction'
-    - 'OpenSemanticSearch\Fields\IndexedItem'
 OpenSemanticSearch\Models\MetaDataTask:
   dependencies:
     service: %$MetaDataService
-  extensions:
-    - 'OpenSemanticSearch\Fields\IndexedItem'
-    - 'OpenSemanticSearch\Fields\SourceQuery'
-
-# add the following in app config for files
-# File:
-#  extensions:
-#    - OpenSemanticSearch\Extensions\FileExtension
-#
-# add the following in app config for Versioned files
-# File:
-#  extensions:
-#    - OpenSemanticSearch\Extensions\VersionedFileExtension
-#
-# add the following in app config for each Page class you want to make searchable (or Page for all pages)
-# Page:
-#  extensions:
-#    - OpenSemanticSearch\Extensions\PageExtension
-#
 OpenSemanticSearch\Services\Service:
   path_map:
     dev:

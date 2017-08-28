@@ -2,8 +2,6 @@
 namespace OpenSemanticSearch\Extensions;
 
 use OpenSemanticSearch\Interfaces\OSSID;
-use OpenSemanticSearch\Traits\reindexer;
-use OpenSemanticSearch\Traits\remover;
 
 /**
  * Extension to add to Pages to control adding, removing and meta data tasks

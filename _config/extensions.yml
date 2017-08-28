@@ -1,0 +1,43 @@
+---
+Name: opensemanticsearch-extensions
+---
+File:
+  extensions:
+    - 'Modular\Fields\FileContentHash'
+    - 'Modular\Fields\FileModifiedStamp'
+    - 'OpenSemanticSearch\Extensions\MetaDataExtension'
+    - 'Modular\Extensions\Model\TrackedValue("Filename")'
+    - 'OpenSemanticSearch\Fields\LastIndexedDate'
+Page:
+  extensions:
+    - 'OpenSemanticSearch\Extensions\MetaDataExtension'
+    - 'OpenSemanticSearch\Fields\LastIndexedDate'
+OpenSemantionSearch\Models\IndexedURL:
+  extensions:
+    - 'Modular\Fields\Title'
+    - 'Modular\Fields\Description'
+    - 'Modular\Fields\URL'
+OpenSemanticSearch\Models\IndexTask:
+  extensions:
+    - 'OpenSemanticSearch\Fields\IndexAction'
+    - 'OpenSemanticSearch\Fields\IndexedItem'
+OpenSemanticSearch\Models\MetaDataTask:
+  extensions:
+    - 'OpenSemanticSearch\Fields\IndexedItem'
+    - 'OpenSemanticSearch\Fields\SourceQuery'
+
+# add the following in app config for files
+# File:
+#  extensions:
+#    - OpenSemanticSearch\Extensions\FileExtension
+#
+# - or - add the following in app config for Versioned files
+# File:
+#  extensions:
+#    - OpenSemanticSearch\Extensions\VersionedFileExtension
+#
+# add the following in app config for each Page class you want to make searchable (or Page for all pages)
+# Page:
+#  extensions:
+#    - OpenSemanticSearch\Extensions\PageExtension
+#

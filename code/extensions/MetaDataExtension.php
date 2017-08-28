@@ -3,6 +3,7 @@
 namespace OpenSemanticSearch\Extensions;
 
 use ArrayData;
+use DateField;
 use DocumentAuthor;
 use FieldList;
 use File;
@@ -151,7 +152,7 @@ class MetaDataExtension extends ModelExtension {
 	 *
 	 */
 	public function updateCMSFields( FieldList $fields ) {
-		if ($this->owner()->ClassName != Folder::class) {
+		if ( $this->owner()->ClassName != Folder::class ) {
 			$add = [
 				new ReadonlyField( self::OSSIDField ),
 				new ReadonlyField( self::TitleField ),
