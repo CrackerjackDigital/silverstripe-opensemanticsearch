@@ -3,6 +3,7 @@
 namespace OpenSemanticSearch\Interfaces;
 
 interface MetaDataInterface {
+	const ServiceName = 'MetaDataService';
 	/**
 	 * Find the model and update it's MetaData fields as added by MetaDataExtension
 	 *

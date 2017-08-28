@@ -9,6 +9,10 @@ interface SearchInterface extends PathMappingInterface, ServiceInterface {
 	const FilterYear        = 'year';
 	const FilterContentType = 'type';
 
+	public function setResultResponseClass( $className );
+
+	public function setErrorResponseClass( $className );
+
 	/**
 	 * Return a single model by it's OSS ID
 	 *

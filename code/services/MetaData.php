@@ -1,4 +1,5 @@
 <?php
+
 namespace OpenSemanticSearch\Services;
 
 use OpenSemanticSearch\Exceptions\Exception;
@@ -15,36 +16,38 @@ use OpenSemanticSearch\Traits\json;
  *
  * @package OpenSemanticSearch
  */
-class MetaDataService extends Service implements MetaDataInterface {
+class MetaData extends Service implements MetaDataInterface {
 	use json;
 	use http;
 
 	/** @var  \OpenSemanticSearch\Interfaces\SearchInterface set via Injector on construct to a suitable search service e.g. %SearchService */
 	private $searcher;
 
-	public function setSearcher(SearchInterface $searcher) {
+	public function setSearcher( SearchInterface $searcher ) {
 		$this->searcher = $searcher;
 	}
 
 	/**
-	 * @param \DataObject|\OpenSemanticSearch\Interfaces\OSSID $model
+	 * @param \DataObject|OSSID $model
 	 *
 	 * @return \DataObject|null
-	 * @throws \Modular\Exceptions\Exception
+	 * @throws \Exception
+	 * @throws \Modular\Exceptions\Debug
 	 */
-	public function populateMetaData($model) {
-		if (!$this->validModel($model)) {
-			$this->debug_fail(new Exception("Invalid model passed, it may not exist anymore or not have the correct extensions"));
+	public function populateMetaData( $model ) {
+		if ( ! $this->validModel( $model ) ) {
+			$this->debug_fail( new Exception( "Invalid model passed, it may not exist anymore or not have the correct extensions" ) );
 		}
 		$found = false;
 
 		/** @var \OpenSemanticSearch\Results\OSSResult $result */
-		if ($result = $this->searcher->find( $model )) {
+		if ( $result = $this->searcher->find( $model ) ) {
 			/** @var \ArrayList $models */
-			if ($models = $result->models(true)) {
+			if ( $models = $result->models( true ) ) {
 				$found = $models->first();
 			}
 		}
+
 		return $found;
 	}
 
@@ -53,9 +56,9 @@ class MetaDataService extends Service implements MetaDataInterface {
 	 *
 	 * @return bool
 	 */
-	protected function validModel($model) {
+	protected function validModel( $model ) {
 		return $model->exists()
-			&& $model->hasExtension(MetaDataExtension::class)
-			&& $model->hasMethod(OSSID::IDMethod);
+		       && $model->hasExtension( MetaDataExtension::class )
+		       && $model->hasMethod( OSSID::IDMethod );
 	}
 }

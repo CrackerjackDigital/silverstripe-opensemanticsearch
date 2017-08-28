@@ -18,7 +18,7 @@ abstract class ModelExtension extends \Modular\ModelExtension {
 	}
 
 	/**
-	 * Queue an IndexTask to reindex the model
+	 * Queue an Index to reindex the model
 	 */
 	public function onBeforeWrite() {
 		$this->reindex();

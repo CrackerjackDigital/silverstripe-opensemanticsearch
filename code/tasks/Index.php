@@ -1,20 +1,20 @@
 <?php
 
-namespace OpenSemanticSearch\Models;
+namespace OpenSemanticSearch\Tasks;
 
 use Modular\Models\QueuedTask;
 use OpenSemanticSearch\Exceptions\Exception;
 use OpenSemanticSearch\Fields\IndexAction;
 use OpenSemanticSearch\Fields\IndexedItem;
-use OpenSemanticSearch\Services\IndexService;
-use OpenSemanticSearch\Services\OSSIndexer;
+use OpenSemanticSearch\Interfaces\IndexInterface;
+use OpenSemanticSearch\Services\Index as Service;
 
 /**
  * Task which adds, removes etc items from the OSS service
  *
  * @package OpenSemanticSearch
  */
-class IndexTask extends QueuedTask {
+class Index extends QueuedTask {
 	const QueueName = 'OpenSemanticSearch';
 
 	private static $singular_name = 'Index Task';
@@ -45,10 +45,10 @@ class IndexTask extends QueuedTask {
 		\OpenSemanticSearch\Fields\IndexAction::Name => true,
 	];
 
-	/** @var  \OpenSemanticSearch\Interfaces\IndexInterface|OSSIndexer set by Injector */
+	/** @var  IndexInterface|Service set by Injector */
 	private $service;
 
-	public function setService( IndexService $service ) {
+	public function setService( IndexInterface $service ) {
 		$this->service = $service;
 	}
 
@@ -89,7 +89,7 @@ class IndexTask extends QueuedTask {
 					$res = $this->service->reindex( $item, $resultMessage );
 					break;
 				default:
-					throw new Exception( "Unknown IndexTask action '$action'" );
+					throw new Exception( "Unknown Index action '$action'" );
 			}
 		} catch ( \Exception $e ) {
 			$res           = false;

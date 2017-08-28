@@ -2,24 +2,28 @@
 
 namespace OpenSemanticSearch\Services;
 
+use File;
 use OpenSemanticSearch\Exceptions\Exception;
 use OpenSemanticSearch\Interfaces\OSSID;
 use OpenSemanticSearch\Interfaces\SearchInterface;
+use OpenSemanticSearch\Models\IndexedURL;
 use OpenSemanticSearch\Results\ErrorResult;
 use OpenSemanticSearch\Results\SolariumResult;
 use OpenSemanticSearch\Traits\array_bitfield_map;
 use OpenSemanticSearch\Traits\http;
 use OpenSemanticSearch\Traits\json;
 use OpenSemanticSearch\Traits\map_key_transform;
+use SiteTree;
 use Solarium\Core\Client\Client;
 use Solarium\Core\Client\Endpoint;
+use Solarium\QueryType\Select\Result\Result;
 
 /**
- * SolariumSearcher SearchInterface implementation which uses the Solarium library https://packagist.org/packages/solarium/solarium
+ * Search SearchInterface implementation which uses the Solarium library https://packagist.org/packages/solarium/solarium
  *
  * @package OpenSemanticSearch\Service
  */
-class SolariumSearcher extends SolrSearcher {
+class Search extends Service implements SearchInterface{
 	use array_bitfield_map;
 	use map_key_transform;
 	use json;
@@ -28,6 +32,10 @@ class SolariumSearcher extends SolrSearcher {
 	const ServiceSolr    = self::TypeSolr;
 	const EndpointRemove = 'delete';
 	const EndpointSearch = 'search';
+	const DefaultLimit   = 100;
+
+	/** @var mixed implementation specific options to pass to search library e.g. solr */
+	protected $searchOptions = [];
 
 	/** @var array default fields to search for full text */
 	private static $fulltext_fields = [ 'title', 'content' ];
@@ -37,6 +45,22 @@ class SolariumSearcher extends SolrSearcher {
 
 	/** @var  Endpoint */
 	protected $endpoint;
+
+	protected $resultResponseClass = SolariumResult::class;
+
+	protected $errorResponseClass = ErrorResult::class;
+
+	public function setResultResponseClass( $className ) {
+		$this->resultResponseClass = $className;
+
+		return $this;
+	}
+
+	public function setErrorResponseClass( $className ) {
+		$this->errorResponseClass = $className;
+
+		return $this;
+	}
 
 	/**
 	 * Return a list of models based on a provided item,
@@ -147,13 +171,9 @@ class SolariumSearcher extends SolrSearcher {
 			$this->debugger()->trace( "result from select: " . print_r( $result, true ) );
 
 			if ( $this->responseIsOK( $result ) ) {
-				$response = new SolariumResult( null, $result );
+				$response = $this->createResultResponse( $result );
 			} else {
-				$response = new ErrorResult(
-					$result->getResponse()->getStatusMessage(),
-					$result->getResponse()->getStatusCode(),
-					$result->getData()
-				);
+				$response = $this->createErrorResponse( $result );
 			}
 
 			return $response;
@@ -165,6 +185,22 @@ class SolariumSearcher extends SolrSearcher {
 		}
 	}
 
+	public function createResultResponse( Result $result ) {
+		$resultClass = $this->resultResponseClass;
+
+		return new $resultClass( $result->getStatus(), $result );
+	}
+
+	public function createErrorResponse( Result $result ) {
+		$resultClass = $this->errorResponseClass;
+
+		return new $resultClass(
+			$result->getResponse()->getStatusMessage(),
+			$result->getResponse()->getStatusCode(),
+			$result->getData()
+		);
+	}
+
 	/**
 	 * Returns options massaged for solarium, e.g. 'limit' becomes 'rows'.
 	 *
@@ -173,12 +209,12 @@ class SolariumSearcher extends SolrSearcher {
 	 * @return SearchInterface|array
 	 */
 	public function searchOptions( $options = null ) {
-		if (func_num_args()) {
-			parent::searchOptions( $options );
-			$this->searchOptions = $this->map_key_transform( $this->searchOptions(), [ 'limit' => 'rows' ], false);
+		if ( func_num_args() ) {
+			$this->searchOptions = $this->map_key_transform( $this->searchOptions, [ 'limit' => 'rows' ], false );
+
 			return $this;
 		} else {
-			return $this->map_key_transform( parent::searchOptions(), [ 'limit' => 'rows' ]);
+			return $this->map_key_transform( $this->searchOptions, [ 'limit' => 'rows' ] );
 		}
 	}
 
@@ -234,5 +270,88 @@ class SolariumSearcher extends SolrSearcher {
 			->setDefaultEndpoint( $this->endpoint() );
 	}
 
+
+	/**
+	 * Find a single specific indexed File
+	 *
+	 * @param mixed|File $fileOrIDOrPath
+	 *
+	 * @param bool       $updateMetaData on the found model, doesn't write it
+	 *
+	 * @return \DataObject|\File|null
+	 * @throws \InvalidArgumentException
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
+	 */
+	public function findFile( $fileOrIDOrPath, $updateMetaData = true ) {
+		if ( $fileOrIDOrPath && is_int( $fileOrIDOrPath ) ) {
+			$file = File::get()->byID( $fileOrIDOrPath );
+		} elseif ( $fileOrIDOrPath instanceof File ) {
+			$file = $fileOrIDOrPath;
+		} elseif ( $fileOrIDOrPath ) {
+			$file = File::get()->filter( [ 'Filename' => $fileOrIDOrPath ] )->first();
+		} else {
+			throw new \InvalidArgumentException( 'Invalid fileOrID' );
+		}
+
+		return $this->find( $file, $updateMetaData );
+	}
+
+	/**
+	 * Find a single specific indexed page
+	 *
+	 * @param mixed|\SiteTree $pageOrIDPath
+	 *
+	 * @param bool            $updateMetaData on the found model, doesn't write it
+	 *
+	 * @return \DataObject|null|\Page
+	 * @throws \InvalidArgumentException
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
+	 */
+	public function findPage( $pageOrIDPath, $updateMetaData = true ) {
+		if ( $pageOrIDPath && is_int( $pageOrIDPath ) ) {
+			$page = SiteTree::get()->byID( $pageOrIDPath );
+		} elseif ( $pageOrIDPath instanceof SiteTree ) {
+			$page = $pageOrIDPath;
+		} elseif ( $pageOrIDPath ) {
+			$page = SiteTree::get_by_link( $pageOrIDPath )->first();
+		} else {
+			throw new \InvalidArgumentException( 'Invalid pageOrIDPath' );
+		}
+
+		return $this->find( $page, $updateMetaData );
+	}
+
+	/**
+	 * Find a single specific indexed url
+	 *
+	 * @param int|string|OSSID $ossidOrIndexedURL
+	 *
+	 * @param bool             $updateMetaData
+	 *
+	 * @return \DataObject|OSSID|\OpenSemanticSearch\Models\IndexedURL
+	 * @throws \InvalidArgumentException
+	 * @throws \OpenSemanticSearch\Exceptions\Exception
+	 */
+	public function findURL( $ossidOrIndexedURL, $updateMetaData = true ) {
+		if ( $ossidOrIndexedURL instanceof OSSID ) {
+
+			$model = $ossidOrIndexedURL;
+
+		} elseif ( $ossidOrIndexedURL && is_int( $ossidOrIndexedURL ) ) {
+
+			$model = IndexedURL::get()->byID( $ossidOrIndexedURL );
+
+		} elseif ( is_string( $ossidOrIndexedURL ) ) {
+
+			$model = new IndexedURL( [
+				IndexedURL::URLField => $ossidOrIndexedURL,
+			] );
+
+		} else {
+			throw new \InvalidArgumentException( 'Invalid ossidOrIndexedURL' );
+		}
+
+		return $this->find( $model, $updateMetaData );
+	}
 
 }

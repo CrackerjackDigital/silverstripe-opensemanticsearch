@@ -12,7 +12,7 @@ use OpenSemanticSearch\Fields\LastIndexedDate;
 
 /**
  * Remover Queues a remove task for later or does it immediately depending on Injector
- * service for 'IndexTask'.
+ * service for 'Index'.
  *
  * @package OpenSemanticSearch
  */
@@ -43,7 +43,7 @@ trait remover {
 			$model = $this->model();
 
 			return \Injector::inst()->create(
-				'IndexTask',
+				'Index',
 				[
 					Title::Name                     => "Remove '" . $model->Title . "' from index",
 					IndexAction::Name               => IndexAction::Remove,

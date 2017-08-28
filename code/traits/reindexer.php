@@ -10,8 +10,8 @@ use OpenSemanticSearch\Fields\IndexAction;
 use OpenSemanticSearch\Fields\IndexedItem;
 
 /**
- * Remover Queues an IndexTask for later or does it immediately depending on Injector
- * service for 'IndexTask'.
+ * Remover Queues an Index for later or does it immediately depending on Injector
+ * service for 'Index'.
  *
  * @package OpenSemanticSearch
  */
@@ -37,7 +37,7 @@ trait reindexer {
 			$model = $this->model();
 
 			return \Injector::inst()->create(
-				'IndexTask',
+				'Index',
 				[
 					Title::Name                     => "ReIndex '" . $model->Title . "'",
 					IndexAction::Name               => IndexAction::ReIndex,

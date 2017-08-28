@@ -68,6 +68,11 @@ class Search extends \ContentController {
 		$message = '';
 
 		$this->extend( 'onBeforeSearch', $terms, $results );
+		foreach ( $results as $item ) {
+			if ( ! $item->canView() ) {
+				$results->remove( $item );
+			}
+		}
 
 		if ( $terms ) {
 			try {
@@ -80,10 +85,10 @@ class Search extends \ContentController {
 
 					// check with model and (this) controller if OK to view
 					$models = $result->models( true )
-					                 ->filterByCallback(
-						                 function ( DataObject $model ) {
-							                 return $this->canViewModel( $model );
-						                 } );
+						->filterByCallback(
+							function ( DataObject $model ) {
+								return $this->canViewModel( $model );
+							} );
 
 					$results->merge( $models );
 				}

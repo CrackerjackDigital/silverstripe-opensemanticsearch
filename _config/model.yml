@@ -1,0 +1,7 @@
+---
+Name: opensemantic-search-model
+---
+OpenSemanticSearch\Models\DocumentAuthor:
+  extensions:
+    - Modular\Fields\Title
+

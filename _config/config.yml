@@ -3,21 +3,21 @@ Name: open-semantic-search-config
 ---
 Injector:
   SearchService:
-    class: 'OpenSemanticSearch\Services\SolariumSearcher'
+    class: 'OpenSemanticSearch\Services\Search'
+  IndexTask:
+    class: 'OpenSemanticSearch\Tasks\Index'
   IndexService:
-    class: 'OpenSemanticSearch\Services\OSSIndexer'
+    class: 'OpenSemanticSearch\Services\Index'
+  MetaDataTask:
+    class: 'OpenSemanticSearch\Tasks\MetaData'
   MetaDataService:
-    class: 'OpenSemanticSearch\Services\MetaDataService'
+    class: 'OpenSemanticSearch\Services\MetaData'
     properties:
       searcher: %$SearchService
-  IndexTask:
-    class: 'OpenSemanticSearch\Models\IndexTask'
-  MetaDataTask:
-    class: 'OpenSemanticSearch\Models\MetaDataTask'
-OpenSemanticSearch\Models\IndexTask:
+OpenSemanticSearch\Tasks\Index:
   dependencies:
     service: %$IndexService
-OpenSemanticSearch\Models\MetaDataTask:
+OpenSemanticSearch\Tasks\MetaData:
   dependencies:
     service: %$MetaDataService
 OpenSemanticSearch\Services\Service:
@@ -26,15 +26,12 @@ OpenSemanticSearch\Services\Service:
       '/assets/': '/mount/files/assets/'
   core:
     '*': 'core1'
-
-# these lines should be configured in site config to point to your opensemanticsearch services, they default to
-# localhost for development environment, also add test and live environments the same format as from 'dev' key down
-OpenSemanticSearch\Services\OSSIndexer:
+OpenSemanticSearch\Services\Index:
   endpoints:
     dev:
       oss:
         '*': 'http://localhost:9010/search-apps/api/{endpoint}'
-OpenSemanticSearch\Services\SolrSearcher:
+OpenSemanticSearch\Services\Search:
   endpoints:
     dev:
       solr:

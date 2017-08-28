@@ -6,18 +6,17 @@ use File;
 use Modular\Queue\QueuedTaskDispatcher;
 use OpenSemanticSearch\Fields\IndexedItem;
 use OpenSemanticSearch\Models\IndexedURL;
-use OpenSemanticSearch\Models\MetaDataTask;
 use Page;
 
 /**
- * Queues a MetaDataTask for execution later e.g. by QueuedTaskRunner.
+ * Queues a MetaData for execution later e.g. by QueuedTaskRunner.
  *
  * @package OpenSemanticSearch
  */
 class QueueMetaDataTask extends QueuedTaskDispatcher {
-	const TaskName = MetaDataTask::class;
+	const TaskName = MetaData::class;
 
-	protected $description = 'Queues a MetaDataTask to retrieve MetaData from search index and update models in SilverStripe';
+	protected $description = 'Queues a MetaData to retrieve MetaData from search index and update models in SilverStripe';
 
 	/**
 	 * @param array  $params

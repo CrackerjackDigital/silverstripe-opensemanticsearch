@@ -25,6 +25,10 @@ OpenSemanticSearch\Models\MetaDataTask:
   extensions:
     - 'OpenSemanticSearch\Fields\IndexedItem'
     - 'OpenSemanticSearch\Fields\SourceQuery'
+OpenSemanticSearch\Tasks\Index:
+  extensions:
+    - 'OpenSemanticSearch\Fields\IndexAction'
+    - 'OpenSemanticSearch\Fields\IndexedItem'
 
 # add the following in app config for files
 # File:

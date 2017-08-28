@@ -8,7 +8,7 @@ use OpenSemanticSearch\Extensions\MetaDataExtension;
 use OpenSemanticSearch\Interfaces\ResultInterface;
 use OpenSemanticSearch\Interfaces\ServiceInterface;
 use OpenSemanticSearch\Models\IndexedURL;
-use OpenSemanticSearch\Services\SolariumSearcher;
+use OpenSemanticSearch\Services\Search;
 use OpenSemanticSearch\Traits\json;
 use Modular\Interfaces\HTTP as HTTP;
 use Page;
@@ -69,7 +69,7 @@ class SolariumResult extends Result implements ResultInterface {
 		$models = new \ArrayList();
 		try {
 
-			$service = SolariumSearcher::get();
+			$service = Search::get();
 
 			if ( $this->hasItems() ) {
 				$items = $this->items();
