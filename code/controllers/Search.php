@@ -84,11 +84,12 @@ class Search extends \ContentController {
 				if ( $result = $service->search( $terms ) ) {
 
 					// check with model and (this) controller if OK to view
-					$models = $result->models( true )
-						->filterByCallback(
-							function ( DataObject $model ) {
-								return $this->canViewModel( $model );
-							} );
+					$models = $result->models( true );
+
+					$models = $models->filterByCallback(
+						function ( DataObject $model ) {
+							return $this->canViewModel( $model );
+						} );
 
 					$results->merge( $models );
 				}
@@ -100,7 +101,7 @@ class Search extends \ContentController {
 		}
 		$this->extend( 'onAfterSearch', $terms, $results );
 
-		$results = new \PaginatedList( $results, $request );
+		$results = new \PaginatedList( $results, $request->getVars() );
 
 		return $this->renderWith(
 			$this->config()->get( 'results_templates' ),
@@ -113,7 +114,7 @@ class Search extends \ContentController {
 	}
 
 	/**
-	 * Return merged incoming options which override the config.search_options settings. Filters out values which are null.
+	 * Return merged incoming options which override the config.search_options settings. Filters out values which are exactly null.
 	 *
 	 * @param \SS_HTTPRequest $request
 	 *

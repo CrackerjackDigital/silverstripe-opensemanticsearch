@@ -210,11 +210,11 @@ class Search extends Service implements SearchInterface{
 	 */
 	public function searchOptions( $options = null ) {
 		if ( func_num_args() ) {
-			$this->searchOptions = $this->map_key_transform( $this->searchOptions, [ 'limit' => 'rows' ], false );
+			$this->searchOptions = $this->map_key_transform( $options, [ 'limit' => 'rows' ], false );
 
 			return $this;
 		} else {
-			return $this->map_key_transform( $this->searchOptions, [ 'limit' => 'rows' ] );
+			return $this->map_key_transform( $options, [ 'limit' => 'rows' ] );
 		}
 	}
 

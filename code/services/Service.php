@@ -20,6 +20,9 @@ use OpenSemanticSearch\Traits\http;
 abstract class Service extends \Object implements ServiceInterface {
 	use debugging, http;
 
+	// this is provided in derived service class or via an interface, e.g. SearchInterface
+	// const ServiceName = self::class;
+
 	// ctor provided options, may be combined with e.g. options passed as a parameter or config options.
 	protected $options;
 	// current configured environment, set in ctor, may override config.environment if set
@@ -196,7 +199,7 @@ abstract class Service extends \Object implements ServiceInterface {
 	 * Check that a path is safe to index files from by comparing the path to paths from path_map for the environment.
 	 *
 	 * - if absolute the path must match up to the first part of one of the paths if absolute (e.g. '/var/www/htdocs/assets'),
-	 * - if relative then the first part of the path should match a path map path (e.g. 'assets/')
+	 * - if relative then the first part of the path should match a relative path map path (e.g. 'assets/')
 	 *
 	 * @param $path
 	 *

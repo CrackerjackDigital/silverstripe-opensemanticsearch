@@ -20,10 +20,11 @@ OpenSemanticSearch\Tasks\Index:
 OpenSemanticSearch\Tasks\MetaData:
   dependencies:
     service: %$MetaDataService
+# below are default paths and services for 'dev' mode sites
 OpenSemanticSearch\Services\Service:
   path_map:
     dev:
-      '/assets/': '/mount/files/assets/'
+      '/assets/': 'assets/'         # relative to site root or absolute to filesystem if starts with '/'
   core:
     '*': 'core1'
 OpenSemanticSearch\Services\Index:
