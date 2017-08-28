@@ -27,7 +27,7 @@ abstract class ModelExtension extends \Modular\ModelExtension {
 	/**
 	 * Remove the file from the index.
 	 */
-	public function onAfterDelete() {
+	public function onBeforeDelete() {
 		$this->remove();
 	}
 

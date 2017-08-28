@@ -23,7 +23,7 @@ trait metadata {
 	 */
 	protected function metadata( $item ) {
 		return \Injector::inst()->create(
-			'MetaData',
+			'MetaDataTask',
 			[
 				Title::Name                     => "Get MetaData for '" . $this->owner()->Title . "'",
 				IndexedItem::field_name()       => $item->ID,

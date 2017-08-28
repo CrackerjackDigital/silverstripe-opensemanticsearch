@@ -37,7 +37,7 @@ trait reindexer {
 			$model = $this->model();
 
 			return \Injector::inst()->create(
-				'Index',
+				'IndexTask',
 				[
 					Title::Name                     => "ReIndex '" . $model->Title . "'",
 					IndexAction::Name               => IndexAction::ReIndex,

@@ -36,7 +36,7 @@ trait adder {
 			$model = $this->model();
 
 			return \Injector::inst()->create(
-				'Index',
+				'IndexTask',
 				[
 					Title::Name                     => "Add '" . $model->Title . "' to index",
 					IndexAction::Name               => IndexAction::Add,

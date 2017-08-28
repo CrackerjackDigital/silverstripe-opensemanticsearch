@@ -11,7 +11,6 @@ use Modular\Fields\DateTimeField;
 use Modular\Fields\Title;
 use Modular\Interfaces\Mappable;
 use Modular\Interfaces\Mappable as Mappableinterface;
-use Modular\ModelExtension;
 use Modular\Traits\bitfield;
 use Modular\Traits\mappable_map_dots;
 use Modular\Traits\mappable_mapper;
@@ -29,7 +28,7 @@ use SS_List;
  * @property string $OSSRetrievedDate
  * @method SS_List OSSAuthors()
  */
-class MetaDataExtension extends ModelExtension {
+class MetaDataExtension extends \Modular\ModelExtension {
 	use bitfield,
 		mappable_model,
 		mappable_mapper,

@@ -43,7 +43,7 @@ trait remover {
 			$model = $this->model();
 
 			return \Injector::inst()->create(
-				'Index',
+				'IndexTask',
 				[
 					Title::Name                     => "Remove '" . $model->Title . "' from index",
 					IndexAction::Name               => IndexAction::Remove,
