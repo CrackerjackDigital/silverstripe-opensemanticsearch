@@ -18,9 +18,9 @@ abstract class ModelExtension extends \Modular\ModelExtension {
 	}
 
 	/**
-	 * Queue an Index to reindex the model
+	 * Queue an Index to reindex the model, needs to be done after write so we have an ID for the model (File, Page etc).
 	 */
-	public function onBeforeWrite() {
+	public function onAfterWrite() {
 		$this->reindex();
 	}
 

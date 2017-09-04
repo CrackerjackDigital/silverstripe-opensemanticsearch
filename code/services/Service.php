@@ -255,11 +255,18 @@ abstract class Service extends \Object implements ServiceInterface {
 
 					// match e.g. '/assets/' local map to '/assets/' part of '/assets/documents/...'
 					if ( $local == substr( $path, 0, strlen( $local ) ) ) {
+						// if remote is relative then it is relative to the web root.
+						if (substr($remote, 0, 1) != '/') {
+							$remote = Controller::join_links(BASE_PATH, $remote);
+						}
 
 						// strip off the local path and append the rest to the remote path
-						$link = Controller::join_links( $remote, substr( $path, strlen( $local ) ) );
-						if ( $scheme ) {
-							$link = $this->rebuildURL( $link, [ HTTPInterface::PartScheme => 'file' ] );
+						$link = '/' . trim(Controller::join_links( $remote, substr( $path, strlen( $local ) ) ), '/');
+
+						if ( $scheme === HTTPInterface::SchemeFile) {
+							$link = $this->rebuildURL( $link, [ HTTPInterface::PartScheme => $scheme ] );
+						} else {
+							$link = $this->rebuildURL( $link, [ HTTPInterface::PartPort => null, HTTPInterface::PartScheme => $scheme ] );
 						}
 						break;
 					}

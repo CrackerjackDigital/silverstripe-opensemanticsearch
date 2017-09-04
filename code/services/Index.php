@@ -129,7 +129,6 @@ class Index extends Service implements IndexInterface {
 		return $result->isOK();
 	}
 
-
 	/**
 	 * @param string $localPath relative to assets folder or absolute from wb root root of file to add to index.
 	 *
@@ -315,12 +314,12 @@ class Index extends Service implements IndexInterface {
 			: '';
 
 		if ( $responseCode && ! $this->responseCodeIsOK( $responseCode ) ) {
-			$result = new ErrorResult($responseBody ?: "Got response $responseCode from service '$service', endpoint '$endpoint'");
+			$result = new ErrorResult( $responseBody ?: "Got response $responseCode from service '$service', endpoint '$endpoint'" );
 		} else {
 			// we got no response code in headers or it was OK, also decode from body
 			$data = $this->decode( $responseBody );
 			if ( $data === false ) {
-				$result = new ErrorResult("No data");
+				$result = new ErrorResult( "No data" );
 
 			} else {
 				$result = new OSSResult( $responseCode, $data );

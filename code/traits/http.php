@@ -115,7 +115,7 @@ trait http {
 			HTTPInterface::PartUser     => '',
 			HTTPInterface::PartPassword => '',
 			HTTPInterface::PartHost     => '',
-			HTTPInterface::PartPort     => '80',
+			HTTPInterface::PartPort     => '443',
 			HTTPInterface::PartPath     => '',
 			HTTPInterface::PartQuery    => '',
 			HTTPInterface::PartFragment => '',
@@ -289,6 +289,8 @@ trait http {
 		$qs = '';
 		if ( is_bool( $encode ) && $encode ) {
 			$method = HTTPInterface::QueryStringEncode;
+		} elseif ($encode) {
+			$method = $encode;
 		} else {
 			$method = '';
 		}
